@@ -78,11 +78,18 @@
    */
   body { display: none; }
   </style>
+  <style>
+    #toggle-map {
+      position: fixed;
+      left: 5px;
+      bottom: 40px;
+    }
+  </style>
 </head>
 <body id='geojsonio-body'>
 
 <div class='geojsonio'></div>
-
+<button id="toggle-map">toggle map</button>
 <script>
 if (self == top) {
   document.getElementsByTagName ("body")[0].style.display = 'block';
@@ -104,6 +111,22 @@ if (/a\.tiles\.mapbox\.com/.test(L.mapbox.config.HTTP_URL)) {
   ga('create', 'UA-12158002-18', 'auto');
   ga('send', 'pageview');
 }
+</script>
+<script>
+  var toggleMap = document.getElementById('toggle-map');
+  var visible = true;
+  toggleMap.addEventListener('click', function () {
+    var map = document.querySelector('.map');
+    var right = document.querySelector('.right');
+    visible = !visible;
+    if (visible) {
+      map.style.display = 'none';
+      right.style.width = '100%';
+    } else {
+      map.style.display = 'initial';
+      right.style.width = '40%';
+    }
+  })
 </script>
 </body>
 </html>
