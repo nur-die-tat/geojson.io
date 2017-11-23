@@ -1,7 +1,7 @@
 var buttons = require('./ui/mode_buttons'),
     file_bar = require('./ui/file_bar'),
     dnd = require('./ui/dnd'),
-    userUi = require('./ui/user'),
+//    userUi = require('./ui/user'),
     layer_switch = require('./ui/layer_switch');
 
 module.exports = ui;
@@ -57,10 +57,10 @@ function ui(context) {
             .append('div')
             .attr('class', 'pane');
 
-        top
-            .append('div')
-            .attr('class', 'user fr pad1 deemphasize')
-            .call(userUi(context));
+        // top
+        //     .append('div')
+        //     .attr('class', 'user fr pad1 deemphasize')
+        //     .call(userUi(context));
 
         top
             .append('div')

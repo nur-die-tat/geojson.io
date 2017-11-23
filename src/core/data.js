@@ -1,11 +1,7 @@
 var clone = require('clone'),
     xtend = require('xtend'),
     config = require('../config.js')(location.hostname),
-    source = {
-        gist: require('../source/gist'),
-        github: require('../source/github'),
-        local: require('../source/local')
-    };
+    source = require('../source/local_server');
 
 function _getData() {
     return {
@@ -269,20 +265,7 @@ module.exports = function(context) {
     };
 
     data.save = function(cb) {
-        var type = context.data.get('type');
-        if (type === 'github') {
-            source.github.save(context, cb);
-        } else if (type === 'gist') {
-            source.gist.save(context, cb);
-        } else if (type === 'local') {
-            if (context.data.path) {
-                source.local.save(context, cb);
-            } else {
-                source.gist.save(context, cb);
-            }
-        } else {
-            source.gist.save(context, cb);
-        }
+        source.save(context, cb);
     };
 
     return data;

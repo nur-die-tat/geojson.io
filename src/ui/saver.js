@@ -6,28 +6,9 @@ module.exports = function(context) {
     function success(err, res) {
         if (err) return flash(context.container, err.toString());
 
-        var message,
-          url,
-          path,
-          commitMessage,
-          type = context.data.get('type');
+        var message = 'Changes saved to file:' + localStorage.getItem('fileName');
 
-        if (type === 'gist' || res.type === 'gist') {
-            // Saved as Gist
-            message = 'Changes to this map saved to Gist: ';
-            url = res.html_url;
-            path = res.id;
-        } else if (type === 'github') {
-            // Committed to GitHub
-            message = 'Changes committed to GitHub: ';
-            url = res.commit.html_url;
-            path = res.commit.sha.substring(0, 10);
-        } else {
-            // Saved as a file
-            message = 'Changes saved to disk.';
-        }
-
-        flash(context.container, message + (url ? '<a href="' + url + '">' + path + '</a>' : ''));
+        flash(context.container, message);
 
         context.container.select('.map').classed('loading', false);
         context.data.parse(res);
@@ -35,8 +16,7 @@ module.exports = function(context) {
 
     var meta = context.data.get('meta'),
         map = context.data.get('map'),
-        features = map && map.geometry || (map.features && map.features.length),
-        type = context.data.get('type');
+        features = map && map.geometry || (map.features && map.features.length);
 
     if (!features) {
         return flash(context.container, 'Add a feature to the map to save it');
@@ -44,23 +24,5 @@ module.exports = function(context) {
 
     context.container.select('.map').classed('loading', true);
 
-    if (type === 'github') {
-        context.repo.details(onrepo);
-    } else {
-        context.data.save(success);
-    }
-
-    function onrepo(err, repo) {
-        if (!err && repo.permissions.push) {
-            var msg = prompt('Commit Message');
-            if (!msg) {
-                context.container.select('.map').classed('loading', false);
-                return;
-            }
-            context.commitMessage = msg;
-            context.data.save(success);
-        } else {
-            context.data.save(success);
-        }
-    }
+    context.data.save(success);
 };

@@ -51,7 +51,7 @@
     "tape": "~2.12.3"
   },
   "scripts": {
-    "start": "nodewebkit",
+    "start": "node server/server.js",
     "test": "eslint src",
     "test-browser": "browserify test/index.js | testling"
   },
