@@ -234,6 +234,19 @@ module.exports = function fileBar(context) {
         });
         xhr.send();
 
+        function openFile(name) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/layers/' + name, true);
+            xhr.responseType = 'json';
+            xhr.addEventListener('load', function () {
+                localStorage.setItem('fileName', name);
+                context.data.clear();
+                var gj = geojsonNormalize(this.response);
+                context.data.mergeFeatures(gj.features);
+            });
+            xhr.send();
+        }
+
         var name = selection.append('div')
             .attr('class', 'name');
 
@@ -260,6 +273,13 @@ module.exports = function fileBar(context) {
             });
             xhr.send();
         }
+        
+        function saveNoun(_) {
+            buttons.filter(function(b) {
+                return b.title === 'Save';
+            }).select('span.title').text(_);
+        }
+
 
         function submenu(children) {
             return function(selection) {
