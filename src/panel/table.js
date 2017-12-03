@@ -1,5 +1,4 @@
-var metatable = require('d3-metatable')(d3),
-    smartZoom = require('../lib/smartzoom.js'),
+var smartZoom = require('../lib/smartzoom.js');
   htmlEncode = require('encode-html'),
   htmlDecode = require('decode-html');
 

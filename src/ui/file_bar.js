@@ -186,10 +186,12 @@ module.exports = function fileBar(context) {
         var items = selection.append('div')
             .attr('class', 'inline')
             .selectAll('div.item')
-            .data(actions)
-            .enter()
+            .data(actions);
+
+        items = items.enter()
             .append('div')
-            .attr('class', 'item');
+            .attr('class', 'item')
+            .merge(items);
 
         var buttons = items.append('a')
             .attr('class', 'parent')
@@ -294,6 +296,13 @@ module.exports = function fileBar(context) {
             // saveNoun(type == 'github' ? 'Commit' : 'Save');
         }
 
+            if (err) {
+                if (err.message) {
+                    flash(context.container, err.message)
+                        .classed('error', 'true');
+                }
+                return;
+            }
         d3.select(document).call(
             d3.keybinding('file_bar')
                 .on('⌘+o', function() {
