@@ -16,6 +16,7 @@ module.exports = function(context) {
                 zoomextent(context);
             }, 100);
         } else {
+            localStorage.setItem('filename', 'no file selected')
             context.storage.remove('recover');
         }
     }

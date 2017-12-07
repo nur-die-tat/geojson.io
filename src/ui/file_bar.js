@@ -232,6 +232,18 @@ module.exports = function fileBar(context) {
         });
         xhr.send();
 
+        var name = selection.append('div')
+            .attr('class', 'name');
+
+        var filename = name.append('span')
+                  .attr('class', 'filename')
+                  .text(localStorage.getItem('fileName') || 'no file selected');
+
+        function saveAction() {
+            if (d3.event) d3.event.preventDefault();
+            saver(context);
+        }
+
         function openFile(name) {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/layers/' + name, true);
@@ -241,26 +253,10 @@ module.exports = function fileBar(context) {
                 context.data.clear();
                 var gj = geojsonNormalize(this.response);
                 context.data.mergeFeatures(gj.features);
+                zoomextent(context);
+                filename.text(name);
             });
             xhr.send();
-        }
-
-        var name = selection.append('div')
-            .attr('class', 'name');
-
-        var filename = name.append('span')
-                  .attr('class', 'filename')
-                  .text('unsaved');
-
-        function saveAction() {
-            if (d3.event) d3.event.preventDefault();
-            saver(context);
-        }
-
-        function saveNoun(_) {
-            buttons.filter(function(b) {
-                return b.title === 'Save';
-            }).select('span.title').text(_);
         }
 
         function submenu(children) {
@@ -298,43 +294,6 @@ module.exports = function fileBar(context) {
             // saveNoun(type == 'github' ? 'Commit' : 'Save');
         }
 
-        function blindImport() {
-            var put = d3.select('body')
-                .append('input')
-                .attr('type', 'file')
-                .style('visibility', 'hidden')
-                .style('position', 'absolute')
-                .style('height', '0')
-                .on('change', function() {
-                    var files = this.files;
-                    if (!(files && files[0])) return;
-                    readFile.readAsText(files[0], function(err, text) {
-                        readFile.readFile(files[0], text, onImport);
-                        if (files[0].path) {
-                            context.data.set({
-                                path: files[0].path
-                            });
-                        }
-                    });
-                    put.remove();
-                });
-            put.node().click();
-        }
-
-        function onImport(err, gj, warning) {
-            gj = geojsonNormalize(gj);
-            if (gj) {
-                context.data.mergeFeatures(gj.features);
-                if (warning) {
-                    flash(context.container, warning.message);
-                } else {
-                    flash(context.container, 'Imported ' + gj.features.length + ' features.')
-                        .classed('success', 'true');
-                }
-                zoomextent(context);
-            }
-        }
-
         d3.select(document).call(
             d3.keybinding('file_bar')
                 .on('⌘+o', function() {
@@ -343,16 +302,6 @@ module.exports = function fileBar(context) {
                 })
                 .on('⌘+s', saveAction));
     }
-
-    // function downloadGeoJSON() {
-    //     if (d3.event) d3.event.preventDefault();
-    //     var content = JSON.stringify(context.data.get('map'));
-    //     var meta = context.data.get('meta');
-    //     saveAs(new Blob([content], {
-    //         type: 'text/plain;charset=utf-8'
-    //     }), (meta && meta.name) || 'map.geojson');
-    // }
-
 
     function allProperties(properties, key, value) {
         properties[key] = value;
