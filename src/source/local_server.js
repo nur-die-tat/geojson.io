@@ -1,6 +1,30 @@
 var serverConf = require('../../server/config.json');
 
-module.exports.save = save;
+module.exports = {
+  save: save,
+  getFileNames: getFileNames,
+  getFile: getFile
+}
+
+function getFileNames(callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/layers', true);
+  xhr.responseType = 'json';
+  xhr.addEventListener('load', function () {
+    callback(this.response);
+  });
+  xhr.send();
+}
+
+function getFile(name, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/layers/' + name, true);
+  xhr.responseType = 'json';
+  xhr.addEventListener('load', function () {
+    callback(this.response);
+  });
+  xhr.send();
+}
 
 function save(context, callback) {
   var map = context.data.get('map');

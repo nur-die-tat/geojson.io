@@ -10,6 +10,8 @@ var
     readFile = require('../lib/readfile'),
     meta = require('../lib/meta.js'),
     saver = require('../ui/saver.js'),
+    getFileNames = require('../source/local_server').getFileNames,
+    getFile = require('../source/local_server').getFile,
     config = require('../config.js')(location.hostname);
 
 var serverConf = require('../../server/config.json')
@@ -31,16 +33,16 @@ module.exports = function fileBar(context) {
             {
                 title: 'Open'
             },
-          {
-            title: 'Save',
-            action: saveAction
-        }, {
-            title: 'New',
-            action: function() {
-                window.open(window.location.origin +
-                    window.location.pathname + '#new');
-            }
-        },
+              {
+                title: 'Save',
+                action: saveAction
+            }, {
+                title: 'New',
+                action: function() {
+                    window.open(window.location.origin +
+                        window.location.pathname + '#new');
+                }
+            },
             {
             title: 'Meta',
             action: function() {},
@@ -135,54 +137,6 @@ module.exports = function fileBar(context) {
             }
         ];
 
-
-        // if (mapboxAPI || githubAPI) {
-        //     actions.unshift({
-        //         title: 'Open',
-        //         children: [
-        //             {
-        //                 title: 'File',
-        //                 alt: 'GeoJSON, TopoJSON, GTFS, KML, CSV, GPX and OSM XML supported',
-        //                 action: blindImport
-        //             }, {
-        //                 title: 'GitHub',
-        //                 alt: 'GeoJSON files in GitHub Repositories',
-        //                 authenticated: true,
-        //                 action: clickGitHubOpen
-        //             }, {
-        //                 title: 'Gist',
-        //                 alt: 'GeoJSON files in GitHub Gists',
-        //                 authenticated: true,
-        //                 action: clickGist
-        //             }
-        //         ]
-        //     });
-        //     actions[1].children.unshift({
-        //             title: 'GitHub',
-        //             alt: 'GeoJSON files in GitHub Repositories',
-        //             authenticated: true,
-        //             action: clickGitHubSave
-        //         }, {
-        //             title: 'Gist',
-        //             alt: 'GeoJSON files in GitHub Gists',
-        //             authenticated: true,
-        //             action: clickGistSave
-        //         });
-        //
-        //     if (mapboxAPI) actions.splice(3, 0, {
-        //             title: 'Share',
-        //             action: function() {
-        //                 context.container.call(share(context));
-        //             }
-        //         });
-        // } else {
-        //     actions.unshift({
-        //         title: 'Open',
-        //         alt: 'CSV, GTFS, KML, GPX, and other filetypes',
-        //         action: blindImport
-        //     });
-        // }
-
         var items = selection.append('div')
             .attr('class', 'inline')
             .selectAll('div.item')
@@ -202,49 +156,37 @@ module.exports = function fileBar(context) {
                 return ' ' + d.title;
             });
 
-        items.each(function(d) {
-            if (!d.children) return;
-            d3.select(this)
-                .append('div')
-                .attr('class', 'children')
-                .call(submenu(d.children));
-        });
+        function updateSubmenus() {
+            items.each(function(d) {
+                if (!d.children) return;
+                d3.select(this)
+                  .append('div')
+                  .attr('class', 'children')
+                  .call(submenu(d.children));
+            });
+        }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/layers', true);
-        xhr.responseType = 'json';
-        xhr.addEventListener('load', function () {
-            var openItem = items[0].filter(function(i) {
-                return i.innerText === 'Open';
-            })[0];
+        updateSubmenus();
 
-            d3.select(openItem)
-              .append('div')
-              .attr('class', 'children')
-              .call(submenu(
-                this.response.map(function (file) {
-                    return {
-                        title: file,
-                        action: function () {
-                            openFile(file);
-                        }
-                    };
-                })
-              ));
+        getFileNames(function (fileNames) {
+            actions[0].children = fileNames.map(function (file) {
+              return {
+                title: file,
+                action: function () {
+                  openFile(file);
+                }
+              };
+            });
+            updateSubmenus();
         });
-        xhr.send();
 
         function openFile(name) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/layers/' + name, true);
-            xhr.responseType = 'json';
-            xhr.addEventListener('load', function () {
-                localStorage.setItem('fileName', name);
-                context.data.clear();
-                var gj = geojsonNormalize(this.response);
-                context.data.mergeFeatures(gj.features);
-            });
-            xhr.send();
+            getFile(name, function(content) {
+              localStorage.setItem('fileName', name);
+              context.data.clear();
+              var gj = geojsonNormalize(content);
+              context.data.mergeFeatures(gj.features);
+            })
         }
 
         var name = selection.append('div')

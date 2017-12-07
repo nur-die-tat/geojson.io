@@ -1,6 +1,5 @@
 var buttons = require('./ui/mode_buttons'),
     file_bar = require('./ui/file_bar'),
-    dnd = require('./ui/dnd'),
 //    userUi = require('./ui/user'),
     layer_switch = require('./ui/layer_switch');
 
@@ -71,8 +70,6 @@ function ui(context) {
             .append('div')
             .attr('class', 'file-bar')
             .call(file_bar(context));
-
-        dnd(context);
     }
 
 
