@@ -1,8 +1,8 @@
 /* eslint-disable linebreak-style */
-var smartZoom = require('../lib/smartzoom.js');
-  htmlEncode = require('encode-html'),
-  htmlDecode = require('decode-html');
-var createTable = require('../panel/fixed-table').createTable;
+var smartZoom = require('../lib/smartzoom.js'),
+  encodeHTML = require('encode-html'),
+  decodeHTML = require('decode-html'),
+  createTable = require('../panel/fixed-table').createTable;
 
 function id(d) {
   return d;
@@ -11,18 +11,59 @@ function id(d) {
 var keys = [
   {
     name: 'id',
-    from: id,
-    to: function (d) {
-      return parseInt(d);
+    in: id,
+    out: function (s) {
+      return parseInt(s);
     }
   },
   {
     name: 'name',
-    from: id,
-    to: id
+    in: id,
+    out: id
   },
   {
-
+    name: 'description',
+    in: function (data) {
+      if (!Array.isArray(data)) {
+        data = [data];
+      }
+      return data.map(function (d) { return encodeHTML(d); }).join('</br>');
+    },
+    out: function (str) {
+      return str.split('<br/>').map(function (s) { return decodeHTML(s); });
+    }
+  },
+  {
+    name: 'icon',
+    in: id,
+    out: id
+  },
+  {
+    name: 'address',
+    in: id,
+    out: id
+  },
+  {
+    name: 'begin',
+    in: id,
+    out: id
+  },
+  {
+    name: 'end',
+    in: id,
+    out: id
+  },
+  {
+    name: 'sources',
+    in: function (data) {
+      if (!Array.isArray(data)) {
+        data = [data];
+      }
+      return data.map(function (d) { return encodeHTML(d); }).join('</br>');
+    },
+    out: function (str) {
+      return str.split('<br/>').map(function (s) { return decodeHTML(s); });
+    }
   }
 ];
 
@@ -51,15 +92,6 @@ module.exports = function(context) {
           .data([props])
           .call(createTable(keys)
             .on('change', function(row, i) {
-                      var content = prop[col.name];
-                      if (typeof content === 'string') {
-                        td.innerText = htmlEncode(content);
-                      } else {
-                        td.innerHTML = content;
-                      }
-
-                      td.addEventListener('change', function () {
-                        debugger
               var geojson = context.data.get('map');
               if (geojson.geometry) {
                 geojson.properties = row;
@@ -77,7 +109,6 @@ module.exports = function(context) {
             })
           );
       }
-
     }
 
     context.dispatch.on('change.table', function(evt) {

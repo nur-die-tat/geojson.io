@@ -59,8 +59,9 @@ function createTable(keys) {
           .append('td')
           .append('div')
           .attr('contenteditable', true)
-          .text(function (d) {
-            return d.key.from(d.data[d.key.name]);
+          .style('display', 'inline-block')
+          .html(function (d) {
+            return d.key.in(d.data[d.key.name]);
           })
           .on('keyup', write)
           .on('change', write)
@@ -69,7 +70,7 @@ function createTable(keys) {
           });
 
         function write(d) {
-          d.data[d.key.name] = d.key.to(d3.select(this).text());
+          d.data[d.key.name] = d.key.out(d3.select(this).html());
           dispatcher.call('change', dispatcher, d.data, d.index);
         }
 

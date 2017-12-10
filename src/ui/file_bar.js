@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 var
     clone = require('clone'),
     geojsonNormalize = require('geojson-normalize'),
@@ -14,7 +15,7 @@ var
     getFile = require('../source/local_server').getFile,
     config = require('../config.js')(location.hostname);
 
-var serverConf = require('../../server/config.json')
+var serverConf = require('../../server/config.json');
 
 /**
  * This module provides the file picking & status bar above the map interface.
@@ -186,7 +187,7 @@ module.exports = function fileBar(context) {
               context.data.clear();
               var gj = geojsonNormalize(content);
               context.data.mergeFeatures(gj.features);
-            })
+            });
         }
 
         var name = selection.append('div')
@@ -200,28 +201,6 @@ module.exports = function fileBar(context) {
             if (d3.event) d3.event.preventDefault();
             saver(context);
         }
-
-        function openFile(name) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/layers/' + name, true);
-            xhr.responseType = 'json';
-            xhr.addEventListener('load', function () {
-                localStorage.setItem('fileName', name);
-                context.data.clear();
-                var gj = geojsonNormalize(this.response);
-                context.data.mergeFeatures(gj.features);
-                zoomextent(context);
-                filename.text(name);
-            });
-            xhr.send();
-        }
-        
-        function saveNoun(_) {
-            buttons.filter(function(b) {
-                return b.title === 'Save';
-            }).select('span.title').text(_);
-        }
-
 
         function submenu(children) {
             return function(selection) {
@@ -242,41 +221,9 @@ module.exports = function fileBar(context) {
             };
         }
 
-        context.dispatch.on('change.filebar', onchange);
-
-
-        function onchange(d) {
-            var data = d.obj,
-                type = data.type,
-                path = data.path;
-            // if (mapboxAPI || githubAPI) filename
-            //     .text(path ? path : 'unsaved')
-            //     .classed('deemphasize', context.data.dirty);
-            // if (mapboxAPI || githubAPI) filetype
-            //     .attr('href', data.url)
-            //     .attr('class', sourceIcon(type));
-            // saveNoun(type == 'github' ? 'Commit' : 'Save');
-        }
-
-            if (err) {
-                if (err.message) {
-                    flash(context.container, err.message)
-                        .classed('error', 'true');
-                }
-                return;
-            }
         d3.select(document).call(
             d3.keybinding('file_bar')
-                .on('⌘+o', function() {
-                    blindImport();
-                    d3.event.preventDefault();
-                })
                 .on('⌘+s', saveAction));
-    }
-
-    function allProperties(properties, key, value) {
-        properties[key] = value;
-        return true;
     }
 
     return bar;
