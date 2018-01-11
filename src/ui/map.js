@@ -60,6 +60,7 @@ module.exports = function(context, readonly) {
         function update() {
             var geojson = context.mapLayer.toGeoJSON();
             geojson = geojsonRewind(geojson);
+            createFeatureIds(geojson.features)
             geojsonToLayer(geojson, context.mapLayer);
             context.data.set({map: layerToGeoJSON(context.mapLayer)}, 'map');
         }
@@ -71,6 +72,20 @@ module.exports = function(context, readonly) {
         function created(e) {
             context.mapLayer.addLayer(e.layer);
             update();
+        }
+
+        function createFeatureIds(features) {
+            var maxId = features
+              .map(function(f) {
+                  return f.properties.id;
+              }).filter(function (id) {
+                  return id != null;
+              }).reduce(Math.max, 0);
+            features.forEach(function (f) {
+                if (f.properties.id == null) {
+                    f.properties.id = ++maxId;
+                }
+            })
         }
     }
 

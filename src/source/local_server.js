@@ -3,8 +3,9 @@ var serverConf = require('../../server/config.json');
 module.exports = {
   save: save,
   getFileNames: getFileNames,
-  getFile: getFile
-}
+  getFile: getFile,
+  getLinks: getLinks
+};
 
 function getFileNames(callback) {
   var xhr = new XMLHttpRequest();
@@ -39,4 +40,14 @@ function save(context, callback) {
     });
   });
   xhr.send(JSON.stringify(map, null, 2));
+}
+
+function getLinks(callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'http://localhost:' + serverConf.port + '/server/links', true);
+  xhr.responseType = 'json';
+  xhr.addEventListener('load', function () {
+    callback(this.response);
+  });
+  xhr.send();
 }

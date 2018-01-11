@@ -2,7 +2,8 @@
 var smartZoom = require('../lib/smartzoom.js'),
   encodeHTML = require('encode-html'),
   decodeHTML = require('decode-html'),
-  createTable = require('../panel/fixed-table').createTable;
+  createTable = require('./fixed-table').createTable,
+  linkCreator = require('./link-creator').linkCreator;
 
 function id(d) {
   return d;
@@ -27,10 +28,14 @@ var keys = [
       if (!Array.isArray(data)) {
         data = [data];
       }
-      return data.map(function (d) { return encodeHTML(d); }).join('</br>');
+      return data.map(function (d) { return d ? encodeHTML(d) : d; }).join('</br>');
     },
     out: function (str) {
-      return str.split('<br/>').map(function (s) { return decodeHTML(s); });
+      return str.split('<br/>').map(function (s) { return s ? decodeHTML(s) : s; });
+    },
+    style: {
+      width: '482px',
+      height: '62px'
     }
   },
   {
@@ -41,7 +46,11 @@ var keys = [
   {
     name: 'address',
     in: id,
-    out: id
+    out: id,
+    style: {
+      width: '247px',
+      height: '62px'
+    }
   },
   {
     name: 'begin',
@@ -59,10 +68,14 @@ var keys = [
       if (!Array.isArray(data)) {
         data = [data];
       }
-      return data.map(function (d) { return encodeHTML(d); }).join('</br>');
+      return data.map(function (d) { return d ? encodeHTML(d) : d; }).join('</br>');
     },
     out: function (str) {
-      return str.split('<br/>').map(function (s) { return decodeHTML(s); });
+      return str.split('<br/>').map(function (s) { return s ? decodeHTML(s) : s; });
+    },
+    style: {
+      width: '247px',
+      height: '62px'
     }
   }
 ];
@@ -88,6 +101,9 @@ module.exports = function(context) {
         props = geojson.geometry ? [geojson.properties] :
           geojson.features.map(getProperties);
         selection.select('.blank-banner').remove();
+
+        selection.call(linkCreator);
+
         selection
           .data([props])
           .call(createTable(keys)

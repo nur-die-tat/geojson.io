@@ -57,9 +57,22 @@ function createTable(keys) {
 
         td.enter()
           .append('td')
-          .append('div')
-          .attr('contenteditable', true)
-          .style('display', 'inline-block')
+          .append('textarea')
+          // .attr('contenteditable', true)
+          .style('width', function (d) {
+            if (d.key.style && d.key.style.width) {
+              return d.key.style.width;
+            } else {
+              return null;
+            }
+          })
+          .style('height', function (d) {
+            if (d.key.style && d.key.style.height) {
+              return d.key.style.height;
+            } else {
+              return null;
+            }
+          })
           .html(function (d) {
             return d.key.in(d.data[d.key.name]);
           })

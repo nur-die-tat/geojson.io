@@ -1,8 +1,6 @@
 /* eslint-disable linebreak-style */
 var
-    clone = require('clone'),
-    geojsonNormalize = require('geojson-normalize'),
-    wellknown = require('wellknown');
+    geojsonNormalize = require('geojson-normalize');
 
 var
     modal = require('./modal.js'),
@@ -15,8 +13,6 @@ var
     getFile = require('../source/local_server').getFile,
     config = require('../config.js')(location.hostname);
 
-var serverConf = require('../../server/config.json');
-
 /**
  * This module provides the file picking & status bar above the map interface.
  * It dispatches to source implementations that interface with specific
@@ -24,8 +20,8 @@ var serverConf = require('../../server/config.json');
  */
 module.exports = function fileBar(context) {
 
-    var shpSupport = typeof ArrayBuffer !== 'undefined';
-    var mapboxAPI = /a\.tiles\.mapbox.com/.test(L.mapbox.config.HTTP_URL);
+    // var shpSupport = typeof ArrayBuffer !== 'undefined';
+    // var mapboxAPI = /a\.tiles\.mapbox.com/.test(L.mapbox.config.HTTP_URL);
     // var githubAPI = !!config.GithubAPI;
     // var githubBase = githubAPI ? config.GithubAPI + '/api/v3': 'https://api.github.com';
 

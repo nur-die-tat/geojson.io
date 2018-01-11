@@ -28,6 +28,23 @@ app.route('/server/layers/:file')
     res.send('ok')
   })
 
+app.route('/server/links')
+  .get(function (req, res) {
+    var files = fs.readdirSync(path.join(conf.localDir, 'layers'));
+    var links = []
+    for (var file of files) {
+      links = links.concat(JSON.parse(fs.readFileSync(path.join(conf.localDir, 'layers', file), 'utf-8'))
+        .features.map(function (f) {
+          return {
+            layer: path.parse(file).name,
+            id: f.properties.id,
+            name: f.properties.name
+          }
+        }))
+    }
+    res.send(JSON.stringify(links))
+  })
+
 app.listen(conf.port)
 
 console.log('serving on ' + conf.port)
