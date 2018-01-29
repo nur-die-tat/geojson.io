@@ -23,7 +23,6 @@ app.route('/server/layers/:file')
     res.send(fs.readFileSync(path.join(conf.localDir, 'layers', req.params.file + '.json'), 'utf-8'))
   })
   .post(function (req, res) {
-    console.log(JSON.stringify(req.body, null, 2))
     fs.writeFileSync(path.join(conf.localDir, 'layers', req.params.file + '.json'), JSON.stringify(req.body, null, 2))
     res.send('ok')
   })

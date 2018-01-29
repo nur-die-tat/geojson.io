@@ -7,12 +7,6 @@ module.exports = function (geojson) {
 };
 
 function updateFeatureIds(features) {
-  features.filter(function (f) {
-      return f.properties.id != null;
-    }).forEach(function (f) {
-      f.id = f.properties.id;
-      delete f.properties['id'];
-    });
   var maxId = features
     .map(function(f) {
       return f.id;
