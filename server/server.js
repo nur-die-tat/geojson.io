@@ -36,7 +36,7 @@ app.route('/server/links')
         .features.map(function (f) {
           return {
             layer: path.parse(file).name,
-            id: f.properties.id,
+            id: f.id,
             name: f.properties.name
           }
         }))
