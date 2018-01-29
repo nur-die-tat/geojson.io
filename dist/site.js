@@ -17169,11 +17169,13 @@ function createTable(keys) {
 
         tr.exit().remove();
 
-        tr = tr.enter().append('tr').merge(tr);
-        tr.append('td')
+        var trEnter = tr.enter().append('tr');
+        trEnter.append('td')
           .text(function (d) {
             return d.id;
           });
+
+        tr = trEnter.merge(tr);
 
         var td = tr.selectAll('td.key')
           .data(function(d, i) {
