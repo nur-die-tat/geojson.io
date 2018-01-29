@@ -1,6 +1,6 @@
 /* eslint-disable linebreak-style */
 var
-    geojsonNormalize = require('geojson-normalize');
+    geojsonNormalize = require('../lib/geojson-normalize');
 
 var
     modal = require('./modal.js'),

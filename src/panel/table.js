@@ -11,13 +11,6 @@ function id(d) {
 
 var keys = [
   {
-    name: 'id',
-    in: id,
-    out: function (s) {
-      return parseInt(s);
-    }
-  },
-  {
     name: 'name',
     in: id,
     out: id
@@ -88,7 +81,7 @@ module.exports = function(context) {
     function rerender() {
       var geojson = context.data.get('map');
 
-      var props;
+      var features;
 
       if (!geojson || !geojson.geometry &&
         (!geojson.features || !geojson.features.length)) {
@@ -98,21 +91,22 @@ module.exports = function(context) {
           .attr('class', 'blank-banner center')
           .text('no features');
       } else {
-        props = geojson.geometry ? [geojson.properties] :
-          geojson.features.map(getProperties);
+        features = geojson.geometry ? [geojson] :
+          geojson.features;
         selection.select('.blank-banner').remove();
+
+        selection.data([features]);
 
         selection.call(linkCreator);
 
         selection
-          .data([props])
           .call(createTable(keys)
             .on('change', function(row, i) {
               var geojson = context.data.get('map');
               if (geojson.geometry) {
-                geojson.properties = row;
+                geojson.properties = row.properties;
               } else {
-                geojson.features[i].properties = row;
+                geojson.features[i].properties = row.properties;
               }
               context.data.set('map', geojson);
             })

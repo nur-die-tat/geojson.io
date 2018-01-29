@@ -20,11 +20,14 @@ function createTable(keys) {
         var thead = enter.append('thead');
         var tbody = enter.append('tbody');
         var tr = thead.append('tr');
+        tr.append('th')
+          .text('id');
         var th = tr
-          .selectAll('th')
+          .selectAll('th.key')
           .data(keys)
           .enter()
           .append('th')
+          .attr('class', 'key')
           .text(function (d) {
             return d.name;
           });
@@ -41,13 +44,17 @@ function createTable(keys) {
         tr.exit().remove();
 
         tr = tr.enter().append('tr').merge(tr);
+        tr.append('td')
+          .text(function (d) {
+            return d.id;
+          });
 
-        var td = tr.selectAll('td')
+        var td = tr.selectAll('td.key')
           .data(function(d, i) {
             return keys.map(function (k) {
               return {
                 key: k,
-                data: d,
+                feature: d,
                 index: i
               };
             });
@@ -57,6 +64,7 @@ function createTable(keys) {
 
         td.enter()
           .append('td')
+          .attr('class', 'key')
           .append('textarea')
           // .attr('contenteditable', true)
           .style('width', function (d) {
@@ -74,17 +82,17 @@ function createTable(keys) {
             }
           })
           .html(function (d) {
-            return d.key.in(d.data[d.key.name]);
+            return d.key.in(d.feature.properties[d.key.name]);
           })
           .on('keyup', write)
           .on('change', write)
           .on('focus', function(d) {
-            dispatcher.call('rowfocus', dispatcher, d.data, d.index);
+            dispatcher.call('rowfocus', dispatcher, d.feature, d.index);
           });
 
         function write(d) {
-          d.data[d.key.name] = d.key.out(d3.select(this).html());
-          dispatcher.call('change', dispatcher, d.data, d.index);
+          d.feature.properties[d.key.name] = d.key.out(d3.select(this).node().value);
+          dispatcher.call('change', dispatcher, d.feature, d.index);
         }
 
         // function mapToObject(m) {

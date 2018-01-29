@@ -16218,7 +16218,7 @@ module.exports = function(context) {
     return data;
 };
 
-},{"../config.js":95,"../source/local_server":114,"clone":6,"xtend":93}],97:[function(require,module,exports){
+},{"../config.js":95,"../source/local_server":115,"clone":6,"xtend":93}],97:[function(require,module,exports){
 var qs = require('qs-hash'),
     zoomextent = require('../lib/zoomextent'),
     flash = require('../ui/flash');
@@ -16304,7 +16304,7 @@ module.exports = function(context) {
     };
 };
 
-},{"../lib/zoomextent":107,"../ui/flash":117,"qs-hash":39}],98:[function(require,module,exports){
+},{"../lib/zoomextent":108,"../ui/flash":118,"qs-hash":39}],98:[function(require,module,exports){
 var config = require('../config.js')(location.hostname);
 
 module.exports = function(context) {
@@ -16543,6 +16543,36 @@ L.Hash.prototype.formatHash = function(map) {
 };
 
 },{"leaflet-hash":29,"qs-hash":39}],102:[function(require,module,exports){
+geojsonNormalize = require('geojson-normalize');
+
+module.exports = function (geojson) {
+  var normalized = geojsonNormalize(geojson);
+  updateFeatureIds(normalized.features);
+  return normalized;
+};
+
+function updateFeatureIds(features) {
+  features.filter(function (f) {
+      return f.properties.id != null;
+    }).forEach(function (f) {
+      f.id = f.properties.id;
+      delete f.properties['id'];
+    });
+  var maxId = features
+    .map(function(f) {
+      return f.id;
+    }).filter(function (id) {
+      return id != null;
+    }).reduce(function (prev, next) {
+      return Math.max(prev, next);
+    }, 0);
+  features.filter(function (f) {
+      return f.id == null;
+    }).forEach(function (f) {
+      f.id = ++maxId;
+    });
+}
+},{"geojson-normalize":18}],103:[function(require,module,exports){
 (function (Buffer){
 var escape = require('escape-html'),
     geojsonRandom = require('geojson-random'),
@@ -16637,7 +16667,7 @@ module.exports.wkxString = function(context) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"../lib/zoomextent":107,"buffer":4,"escape-html":11,"geojson-extent":16,"geojson-flatten":17,"geojson-random":19,"polyline":36,"wkx":91}],103:[function(require,module,exports){
+},{"../lib/zoomextent":108,"buffer":4,"escape-html":11,"geojson-extent":16,"geojson-flatten":17,"geojson-random":19,"polyline":36,"wkx":91}],104:[function(require,module,exports){
 module.exports = function(context) {
     return function(e) {
         var sel = d3.select(e.popup._contentNode);
@@ -16702,14 +16732,14 @@ module.exports = function(context) {
     };
 };
 
-},{}],104:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 var topojson = require('topojson'),
     toGeoJSON = require('togeojson'),
     gtfs2geojson = require('gtfs2geojson'),
     csv2geojson = require('csv2geojson'),
     osmtogeojson = require('osmtogeojson'),
     polytogeojson = require('polytogeojson'),
-    geojsonNormalize = require('geojson-normalize');
+    geojsonNormalize = require('./geojson-normalize');
 
 module.exports.readDrop = readDrop;
 module.exports.readAsText = readAsText;
@@ -16895,7 +16925,7 @@ function readFile(f, text, callback) {
     }
 }
 
-},{"csv2geojson":7,"geojson-normalize":18,"gtfs2geojson":23,"osmtogeojson":31,"polytogeojson":37,"togeojson":43,"topojson":"topojson"}],105:[function(require,module,exports){
+},{"./geojson-normalize":102,"csv2geojson":7,"gtfs2geojson":23,"osmtogeojson":31,"polytogeojson":37,"togeojson":43,"topojson":"topojson"}],106:[function(require,module,exports){
 module.exports = function(map, feature, bounds) {
     var zoomLevel;
 
@@ -16907,7 +16937,7 @@ module.exports = function(map, feature, bounds) {
     }
 };
 
-},{}],106:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 var geojsonhint = require('geojsonhint');
 
 module.exports = function(callback) {
@@ -16968,13 +16998,13 @@ module.exports = function(callback) {
     };
 };
 
-},{"geojsonhint":21}],107:[function(require,module,exports){
+},{"geojsonhint":21}],108:[function(require,module,exports){
 module.exports = function(context) {
     var bounds = context.mapLayer.getBounds();
     if (bounds.isValid()) context.map.fitBounds(bounds);
 };
 
-},{}],108:[function(require,module,exports){
+},{}],109:[function(require,module,exports){
 var ui = require('./ui'),
     map = require('./ui/map'),
     data = require('./core/data'),
@@ -17004,7 +17034,7 @@ function geojsonIO() {
     return context;
 }
 
-},{"./core/data":96,"./core/loader":97,"./core/repo":98,"./core/router":99,"./core/user":100,"./ui":115,"./ui/map":119,"store":42}],109:[function(require,module,exports){
+},{"./core/data":96,"./core/loader":97,"./core/repo":98,"./core/router":99,"./core/user":100,"./ui":116,"./ui/map":120,"store":42}],110:[function(require,module,exports){
 /* eslint-disable linebreak-style */
 
 module.exports = {
@@ -17027,11 +17057,14 @@ function createTable(keys) {
         var thead = enter.append('thead');
         var tbody = enter.append('tbody');
         var tr = thead.append('tr');
+        tr.append('th')
+          .text('id');
         var th = tr
-          .selectAll('th')
+          .selectAll('th.key')
           .data(keys)
           .enter()
           .append('th')
+          .attr('class', 'key')
           .text(function (d) {
             return d.name;
           });
@@ -17048,13 +17081,17 @@ function createTable(keys) {
         tr.exit().remove();
 
         tr = tr.enter().append('tr').merge(tr);
+        tr.append('td')
+          .text(function (d) {
+            return d.id;
+          });
 
-        var td = tr.selectAll('td')
+        var td = tr.selectAll('td.key')
           .data(function(d, i) {
             return keys.map(function (k) {
               return {
                 key: k,
-                data: d,
+                feature: d,
                 index: i
               };
             });
@@ -17064,6 +17101,7 @@ function createTable(keys) {
 
         td.enter()
           .append('td')
+          .attr('class', 'key')
           .append('textarea')
           // .attr('contenteditable', true)
           .style('width', function (d) {
@@ -17081,17 +17119,17 @@ function createTable(keys) {
             }
           })
           .html(function (d) {
-            return d.key.in(d.data[d.key.name]);
+            return d.key.in(d.feature.properties[d.key.name]);
           })
           .on('keyup', write)
           .on('change', write)
           .on('focus', function(d) {
-            dispatcher.call('rowfocus', dispatcher, d.data, d.index);
+            dispatcher.call('rowfocus', dispatcher, d.feature, d.index);
           });
 
         function write(d) {
-          d.data[d.key.name] = d.key.out(d3.select(this).html());
-          dispatcher.call('change', dispatcher, d.data, d.index);
+          d.feature.properties[d.key.name] = d.key.out(d3.select(this).node().value);
+          dispatcher.call('change', dispatcher, d.feature, d.index);
         }
 
         // function mapToObject(m) {
@@ -17136,7 +17174,7 @@ function createTable(keys) {
   return table;
 }
 
-},{}],110:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 (function (Buffer){
 
 var marked = require('marked');
@@ -17160,7 +17198,7 @@ module.exports = function(context) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":4,"marked":30}],111:[function(require,module,exports){
+},{"buffer":4,"marked":30}],112:[function(require,module,exports){
 var validate = require('../lib/validate'),
     zoomextent = require('../lib/zoomextent'),
     saver = require('../ui/saver.js');
@@ -17225,7 +17263,7 @@ module.exports = function(context) {
     return render;
 };
 
-},{"../lib/validate":106,"../lib/zoomextent":107,"../ui/saver.js":123}],112:[function(require,module,exports){
+},{"../lib/validate":107,"../lib/zoomextent":108,"../ui/saver.js":124}],113:[function(require,module,exports){
 var getLinks = require('../source/local_server').getLinks;
 
 module.exports = {
@@ -17233,66 +17271,75 @@ module.exports = {
 };
 
 function linkCreator(selection) {
-  var div = selection.append('div');
-  var layerSelect = selection.append('select');
-  var featureSelect = selection.append('select');
-  var output = selection.append('input')
-    .property('type', 'text')
-    .on('focus', function () {
-      this.select();
-    });
-  getLinks(function (links) {
-    var layers = d3.set();
-    links.forEach(function (link) {
-      layers.add(link.layer);
-    });
-    layers = layers.values();
+  selection.each(function (d) {
+    var sel = d3.select(this);
 
-    layerSelect
-      .selectAll('option')
-      .data(layers)
-      .enter()
-      .append('option')
-      .text(function (d) {
-        return d;
-      });
-
-    function getSelectedDatum(select) {
-      var si = select.node().selectedIndex;
-      return select.selectAll('option')
-        .filter(function (d, i) { return i === si; }).datum()
-    }
-
-    function updateFeatureSelect() {
-      var layer = getSelectedDatum(layerSelect);
-      featureSelect
-        .html('')
-        .selectAll('option')
-        .data(links.filter(function (link) {
-          return link.layer === layer;
-        }))
-        .enter()
-        .append('option')
-        .text(function (d2) {
-          return '#' + d2.id + ' ' + d2.name;
+    var enter = sel.selectAll('div.link-creator').data([d]).enter()
+      .append('div').attr('class', 'link-creator');
+    if (enter.node() !== null) {
+      var layerSelect = enter.append('select');
+      var featureSelect = enter.append('select');
+      var output = enter.append('input')
+        .property('type', 'text')
+        .on('focus', function () {
+          this.select();
         });
+      getLinks(function (links) {
+        var layers = d3.set();
+        links.forEach(function (link) {
+          layers.add(link.layer);
+        });
+        layers = layers.values();
+
+        layerSelect
+          .selectAll('option')
+          .data(layers)
+          .enter()
+          .append('option')
+          .text(function (d) {
+            return d;
+          });
+
+        function getSelectedDatum(select) {
+          var si = select.node().selectedIndex;
+          return select.selectAll('option')
+            .filter(function (d, i) {
+              return i === si;
+            }).datum()
+        }
+
+        function updateFeatureSelect() {
+          var layer = getSelectedDatum(layerSelect);
+          featureSelect
+            .html('')
+            .selectAll('option')
+            .data(links.filter(function (link) {
+              return link.layer === layer;
+            }))
+            .enter()
+            .append('option')
+            .text(function (d2) {
+              return '#' + d2.id + ' ' + d2.name;
+            });
+        }
+
+        function updateLink() {
+          var link = getSelectedDatum(featureSelect);
+          output.property('value',
+            '<a class=\'feature-link\' data-layer=\'' + link.layer + '\' data-feature=\'' + link.id + '\' href=\'#\'>');
+        }
+
+        layerSelect.on('change', updateFeatureSelect);
+        featureSelect.on('change', updateLink);
+
+        updateFeatureSelect();
+        updateLink();
+      });
     }
-
-    function updateLink() {
-      var link = getSelectedDatum(featureSelect);
-      output.property('value',
-        '<a class="feature-link" data-layer="' + link.layer + '" data-feature="' + link.id + '" href="#">');
-    }
-
-    layerSelect.on('change', updateFeatureSelect);
-    featureSelect.on('change', updateLink);
-
-    updateFeatureSelect();
-    updateLink();
-  })
+  });
 };
 
-},{"../source/local_server":114}],113:[function(require,module,exports){
+},{"../source/local_server":115}],114:[function(require,module,exports){
 /* eslint-disable linebreak-style */
 var smartZoom = require('../lib/smartzoom.js'),
   encodeHTML = require('encode-html'),
@@ -17305,13 +17352,6 @@ function id(d) {
 }
 
 var keys = [
-  {
-    name: 'id',
-    in: id,
-    out: function (s) {
-      return parseInt(s);
-    }
-  },
   {
     name: 'name',
     in: id,
@@ -17383,7 +17423,7 @@ module.exports = function(context) {
     function rerender() {
       var geojson = context.data.get('map');
 
-      var props;
+      var features;
 
       if (!geojson || !geojson.geometry &&
         (!geojson.features || !geojson.features.length)) {
@@ -17393,21 +17433,22 @@ module.exports = function(context) {
           .attr('class', 'blank-banner center')
           .text('no features');
       } else {
-        props = geojson.geometry ? [geojson.properties] :
-          geojson.features.map(getProperties);
+        features = geojson.geometry ? [geojson] :
+          geojson.features;
         selection.select('.blank-banner').remove();
+
+        selection.data([features]);
 
         selection.call(linkCreator);
 
         selection
-          .data([props])
           .call(createTable(keys)
             .on('change', function(row, i) {
               var geojson = context.data.get('map');
               if (geojson.geometry) {
-                geojson.properties = row;
+                geojson.properties = row.properties;
               } else {
-                geojson.features[i].properties = row;
+                geojson.features[i].properties = row.properties;
               }
               context.data.set('map', geojson);
             })
@@ -17448,7 +17489,7 @@ module.exports = function(context) {
 
 
 
-},{"../lib/smartzoom.js":105,"./fixed-table":109,"./link-creator":112,"decode-html":8,"encode-html":10}],114:[function(require,module,exports){
+},{"../lib/smartzoom.js":106,"./fixed-table":110,"./link-creator":113,"decode-html":8,"encode-html":10}],115:[function(require,module,exports){
 var serverConf = require('../../server/config.json');
 
 module.exports = {
@@ -17503,7 +17544,7 @@ function getLinks(callback) {
   xhr.send();
 }
 
-},{"../../server/config.json":94}],115:[function(require,module,exports){
+},{"../../server/config.json":94}],116:[function(require,module,exports){
 var buttons = require('./ui/mode_buttons'),
     file_bar = require('./ui/file_bar'),
 //    userUi = require('./ui/user'),
@@ -17585,10 +17626,10 @@ function ui(context) {
     };
 }
 
-},{"./ui/file_bar":116,"./ui/layer_switch":118,"./ui/mode_buttons":122}],116:[function(require,module,exports){
+},{"./ui/file_bar":117,"./ui/layer_switch":119,"./ui/mode_buttons":123}],117:[function(require,module,exports){
 /* eslint-disable linebreak-style */
 var
-    geojsonNormalize = require('geojson-normalize');
+    geojsonNormalize = require('../lib/geojson-normalize');
 
 var
     modal = require('./modal.js'),
@@ -17813,7 +17854,7 @@ module.exports = function fileBar(context) {
     return bar;
 };
 
-},{"../config.js":95,"../lib/meta.js":102,"../lib/readfile":104,"../lib/zoomextent":107,"../source/local_server":114,"../ui/saver.js":123,"./flash":117,"./modal.js":121,"geojson-normalize":18}],117:[function(require,module,exports){
+},{"../config.js":95,"../lib/geojson-normalize":102,"../lib/meta.js":103,"../lib/readfile":105,"../lib/zoomextent":108,"../source/local_server":115,"../ui/saver.js":124,"./flash":118,"./modal.js":122}],118:[function(require,module,exports){
 var message = require('./message');
 
 module.exports = flash;
@@ -17835,7 +17876,7 @@ function flash(selection, txt) {
     return msg;
 }
 
-},{"./message":120}],118:[function(require,module,exports){
+},{"./message":121}],119:[function(require,module,exports){
 module.exports = function(context) {
 
     return function(selection) {
@@ -17903,7 +17944,7 @@ module.exports = function(context) {
     };
 };
 
-},{}],119:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
 require('qs-hash');
 require('../lib/custom_hash.js');
 
@@ -17911,6 +17952,7 @@ var popup = require('../lib/popup'),
     escape = require('escape-html'),
     LGeo = require('leaflet-geodesy'),
     geojsonRewind = require('geojson-rewind'),
+    geojsonNormalize = require('../lib/geojson-normalize'),
     writable = false,
     showStyle = true,
     makiValues = require('../../data/maki.json'),
@@ -17965,8 +18007,8 @@ module.exports = function(context, readonly) {
 
         function update() {
             var geojson = context.mapLayer.toGeoJSON();
+            geojsonNormalize(geojson);
             geojson = geojsonRewind(geojson);
-            createFeatureIds(geojson.features);
             geojsonToLayer(geojson, context.mapLayer);
             context.data.set({map: layerToGeoJSON(context.mapLayer)}, 'map');
         }
@@ -17978,21 +18020,6 @@ module.exports = function(context, readonly) {
         function created(e) {
             context.mapLayer.addLayer(e.layer);
             update();
-        }
-
-        function createFeatureIds(features) {
-            debugger;
-            var maxId = features
-              .map(function(f) {
-                  return f.properties.id;
-              }).filter(function (id) {
-                  return id != null;
-              }).reduce(Math.max, 0);
-            features.forEach(function (f) {
-                if (f.properties.id == null) {
-                    f.properties.id = ++maxId;
-                }
-            })
         }
     }
 
@@ -18192,7 +18219,7 @@ function bindPopup(l) {
     });
 }
 
-},{"../../data/maki.json":1,"../lib/custom_hash.js":101,"../lib/popup":103,"escape-html":11,"geojson-rewind":20,"leaflet-geodesy":27,"qs-hash":39}],120:[function(require,module,exports){
+},{"../../data/maki.json":1,"../lib/custom_hash.js":101,"../lib/geojson-normalize":102,"../lib/popup":104,"escape-html":11,"geojson-rewind":20,"leaflet-geodesy":27,"qs-hash":39}],121:[function(require,module,exports){
 module.exports = message;
 
 function message(selection) {
@@ -18233,7 +18260,7 @@ function message(selection) {
     return sel;
 }
 
-},{}],121:[function(require,module,exports){
+},{}],122:[function(require,module,exports){
 module.exports = function(selection, blocking) {
 
     var previous = selection.select('div.modal');
@@ -18301,7 +18328,7 @@ module.exports = function(selection, blocking) {
     return shaded;
 };
 
-},{}],122:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 var table = require('../panel/table'),
     json = require('../panel/json'),
     help = require('../panel/help');
@@ -18355,7 +18382,7 @@ module.exports = function(context, pane) {
     };
 };
 
-},{"../panel/help":110,"../panel/json":111,"../panel/table":113}],123:[function(require,module,exports){
+},{"../panel/help":111,"../panel/json":112,"../panel/table":114}],124:[function(require,module,exports){
 var flash = require('./flash');
 
 module.exports = function(context) {
@@ -18385,7 +18412,7 @@ module.exports = function(context) {
     context.data.save(success);
 };
 
-},{"./flash":117}],"topojson":[function(require,module,exports){
+},{"./flash":118}],"topojson":[function(require,module,exports){
 var topojson = module.exports = require("./topojson");
 topojson.topology = require("./lib/topojson/topology");
 topojson.simplify = require("./lib/topojson/simplify");
@@ -18396,4 +18423,4 @@ topojson.bind = require("./lib/topojson/bind");
 topojson.stitch = require("./lib/topojson/stitch");
 topojson.scale = require("./lib/topojson/scale");
 
-},{"./lib/topojson/bind":44,"./lib/topojson/clockwise":47,"./lib/topojson/filter":51,"./lib/topojson/prune":55,"./lib/topojson/scale":57,"./lib/topojson/simplify":58,"./lib/topojson/stitch":60,"./lib/topojson/topology":61,"./topojson":73}]},{},[108]);
+},{"./lib/topojson/bind":44,"./lib/topojson/clockwise":47,"./lib/topojson/filter":51,"./lib/topojson/prune":55,"./lib/topojson/scale":57,"./lib/topojson/simplify":58,"./lib/topojson/stitch":60,"./lib/topojson/topology":61,"./topojson":73}]},{},[109]);
