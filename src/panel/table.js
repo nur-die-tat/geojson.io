@@ -28,10 +28,10 @@ var keys = [
       if (!Array.isArray(data)) {
         data = [data];
       }
-      return data.map(function (d) { return d ? encodeHTML(d) : d; }).join('</br>');
+      return data.map(function (d) { return d ? encodeHTML(d) : d; }).join('\n');
     },
     out: function (str) {
-      return str.split('<br/>').map(function (s) { return s ? decodeHTML(s) : s; });
+      return str.split('\n').map(function (s) { return s ? decodeHTML(s) : s; });
     },
     style: {
       width: '482px',
@@ -68,10 +68,10 @@ var keys = [
       if (!Array.isArray(data)) {
         data = [data];
       }
-      return data.map(function (d) { return d ? encodeHTML(d) : d; }).join('</br>');
+      return data.map(function (d) { return d ? encodeHTML(d) : d; }).join('\n');
     },
     out: function (str) {
-      return str.split('<br/>').map(function (s) { return s ? decodeHTML(s) : s; });
+      return str.split('\n').map(function (s) { return s ? decodeHTML(s) : s; });
     },
     style: {
       width: '247px',
