@@ -18,6 +18,7 @@ function updateFeatureIds(features) {
   features.filter(function (f) {
       return f.id == null;
     }).forEach(function (f) {
-      f.id = ++maxId;
+      f.id = Math.max(Date.now(), maxId + 1);
+      maxId = f.id;
     });
 }
