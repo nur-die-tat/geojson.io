@@ -2953,7 +2953,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":5,"ieee754":25}],5:[function(require,module,exports){
+},{"base64-js":5,"ieee754":27}],5:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -3388,7 +3388,12 @@ module.exports = {
     toPolygon: toPolygon
 };
 
-},{"dsv":9,"sexagesimal":40}],8:[function(require,module,exports){
+},{"dsv":8,"sexagesimal":42}],8:[function(require,module,exports){
+
+
+module.exports = new Function("dsv.version = \"0.0.3\";\n\ndsv.tsv = dsv(\"\\t\");\ndsv.csv = dsv(\",\");\n\nfunction dsv(delimiter) {\n  var dsv = {},\n      reFormat = new RegExp(\"[\\\"\" + delimiter + \"\\n]\"),\n      delimiterCode = delimiter.charCodeAt(0);\n\n  dsv.parse = function(text, f) {\n    var o;\n    return dsv.parseRows(text, function(row, i) {\n      if (o) return o(row, i - 1);\n      var a = new Function(\"d\", \"return {\" + row.map(function(name, i) {\n        return JSON.stringify(name) + \": d[\" + i + \"]\";\n      }).join(\",\") + \"}\");\n      o = f ? function(row, i) { return f(a(row), i); } : a;\n    });\n  };\n\n  dsv.parseRows = function(text, f) {\n    var EOL = {}, // sentinel value for end-of-line\n        EOF = {}, // sentinel value for end-of-file\n        rows = [], // output rows\n        N = text.length,\n        I = 0, // current character index\n        n = 0, // the current line number\n        t, // the current token\n        eol; // is the current token followed by EOL?\n\n    function token() {\n      if (I >= N) return EOF; // special case: end of file\n      if (eol) return eol = false, EOL; // special case: end of line\n\n      // special case: quotes\n      var j = I;\n      if (text.charCodeAt(j) === 34) {\n        var i = j;\n        while (i++ < N) {\n          if (text.charCodeAt(i) === 34) {\n            if (text.charCodeAt(i + 1) !== 34) break;\n            ++i;\n          }\n        }\n        I = i + 2;\n        var c = text.charCodeAt(i + 1);\n        if (c === 13) {\n          eol = true;\n          if (text.charCodeAt(i + 2) === 10) ++I;\n        } else if (c === 10) {\n          eol = true;\n        }\n        return text.substring(j + 1, i).replace(/\"\"/g, \"\\\"\");\n      }\n\n      // common case: find next delimiter or newline\n      while (I < N) {\n        var c = text.charCodeAt(I++), k = 1;\n        if (c === 10) eol = true; // \\n\n        else if (c === 13) { eol = true; if (text.charCodeAt(I) === 10) ++I, ++k; } // \\r|\\r\\n\n        else if (c !== delimiterCode) continue;\n        return text.substring(j, I - k);\n      }\n\n      // special case: last token before EOF\n      return text.substring(j);\n    }\n\n    while ((t = token()) !== EOF) {\n      var a = [];\n      while (t !== EOL && t !== EOF) {\n        a.push(t);\n        t = token();\n      }\n      if (f && !(a = f(a, n++))) continue;\n      rows.push(a);\n    }\n\n    return rows;\n  };\n\n  dsv.format = function(rows) {\n    if (Array.isArray(rows[0])) return dsv.formatRows(rows); // deprecated; use formatRows\n    var fieldSet = {}, fields = [];\n\n    // Compute unique fields in order of discovery.\n    rows.forEach(function(row) {\n      for (var field in row) {\n        if (!(field in fieldSet)) {\n          fields.push(fieldSet[field] = field);\n        }\n      }\n    });\n\n    return [fields.map(formatValue).join(delimiter)].concat(rows.map(function(row) {\n      return fields.map(function(field) {\n        return formatValue(row[field]);\n      }).join(delimiter);\n    })).join(\"\\n\");\n  };\n\n  dsv.formatRows = function(rows) {\n    return rows.map(formatRow).join(\"\\n\");\n  };\n\n  function formatRow(row) {\n    return row.map(formatValue).join(delimiter);\n  }\n\n  function formatValue(text) {\n    return reFormat.test(text) ? \"\\\"\" + text.replace(/\\\"/g, \"\\\"\\\"\") + \"\\\"\" : text;\n  }\n\n  return dsv;\n}\n" + ";return dsv")();
+
+},{}],9:[function(require,module,exports){
 // Store markers outside of the function scope,
 // not to recreate them on every call
 var entities = {
@@ -3412,11 +3417,6 @@ module.exports = function decodeHTMLEntities(text) {
     return match;
   });
 };
-
-},{}],9:[function(require,module,exports){
-
-
-module.exports = new Function("dsv.version = \"0.0.3\";\n\ndsv.tsv = dsv(\"\\t\");\ndsv.csv = dsv(\",\");\n\nfunction dsv(delimiter) {\n  var dsv = {},\n      reFormat = new RegExp(\"[\\\"\" + delimiter + \"\\n]\"),\n      delimiterCode = delimiter.charCodeAt(0);\n\n  dsv.parse = function(text, f) {\n    var o;\n    return dsv.parseRows(text, function(row, i) {\n      if (o) return o(row, i - 1);\n      var a = new Function(\"d\", \"return {\" + row.map(function(name, i) {\n        return JSON.stringify(name) + \": d[\" + i + \"]\";\n      }).join(\",\") + \"}\");\n      o = f ? function(row, i) { return f(a(row), i); } : a;\n    });\n  };\n\n  dsv.parseRows = function(text, f) {\n    var EOL = {}, // sentinel value for end-of-line\n        EOF = {}, // sentinel value for end-of-file\n        rows = [], // output rows\n        N = text.length,\n        I = 0, // current character index\n        n = 0, // the current line number\n        t, // the current token\n        eol; // is the current token followed by EOL?\n\n    function token() {\n      if (I >= N) return EOF; // special case: end of file\n      if (eol) return eol = false, EOL; // special case: end of line\n\n      // special case: quotes\n      var j = I;\n      if (text.charCodeAt(j) === 34) {\n        var i = j;\n        while (i++ < N) {\n          if (text.charCodeAt(i) === 34) {\n            if (text.charCodeAt(i + 1) !== 34) break;\n            ++i;\n          }\n        }\n        I = i + 2;\n        var c = text.charCodeAt(i + 1);\n        if (c === 13) {\n          eol = true;\n          if (text.charCodeAt(i + 2) === 10) ++I;\n        } else if (c === 10) {\n          eol = true;\n        }\n        return text.substring(j + 1, i).replace(/\"\"/g, \"\\\"\");\n      }\n\n      // common case: find next delimiter or newline\n      while (I < N) {\n        var c = text.charCodeAt(I++), k = 1;\n        if (c === 10) eol = true; // \\n\n        else if (c === 13) { eol = true; if (text.charCodeAt(I) === 10) ++I, ++k; } // \\r|\\r\\n\n        else if (c !== delimiterCode) continue;\n        return text.substring(j, I - k);\n      }\n\n      // special case: last token before EOF\n      return text.substring(j);\n    }\n\n    while ((t = token()) !== EOF) {\n      var a = [];\n      while (t !== EOL && t !== EOF) {\n        a.push(t);\n        t = token();\n      }\n      if (f && !(a = f(a, n++))) continue;\n      rows.push(a);\n    }\n\n    return rows;\n  };\n\n  dsv.format = function(rows) {\n    if (Array.isArray(rows[0])) return dsv.formatRows(rows); // deprecated; use formatRows\n    var fieldSet = {}, fields = [];\n\n    // Compute unique fields in order of discovery.\n    rows.forEach(function(row) {\n      for (var field in row) {\n        if (!(field in fieldSet)) {\n          fields.push(fieldSet[field] = field);\n        }\n      }\n    });\n\n    return [fields.map(formatValue).join(delimiter)].concat(rows.map(function(row) {\n      return fields.map(function(field) {\n        return formatValue(row[field]);\n      }).join(delimiter);\n    })).join(\"\\n\");\n  };\n\n  dsv.formatRows = function(rows) {\n    return rows.map(formatRow).join(\"\\n\");\n  };\n\n  function formatRow(row) {\n    return row.map(formatValue).join(delimiter);\n  }\n\n  function formatValue(text) {\n    return reFormat.test(text) ? \"\\\"\" + text.replace(/\\\"/g, \"\\\"\\\"\") + \"\\\"\" : text;\n  }\n\n  return dsv;\n}\n" + ";return dsv")();
 
 },{}],10:[function(require,module,exports){
 module.exports = function encodeHTMLEntities(text) {
@@ -3642,7 +3642,7 @@ function rad(_) {
     return _ * Math.PI / 180;
 }
 
-},{"wgs84":78}],14:[function(require,module,exports){
+},{"wgs84":80}],14:[function(require,module,exports){
 module.exports = function flatten(list, depth) {
     return _flatten(list);
 
@@ -3678,37 +3678,7 @@ module.exports = function(_) {
     return coordinates;
 };
 
-},{"./flatten":14,"geojson-flatten":17,"geojson-normalize":18}],16:[function(require,module,exports){
-var geojsonCoords = require('geojson-coords'),
-    traverse = require('traverse'),
-    extent = require('extent');
-
-module.exports = function(_) {
-    return getExtent(_).bbox();
-};
-
-module.exports.polygon = function(_) {
-    return getExtent(_).polygon();
-};
-
-module.exports.bboxify = function(_) {
-    return traverse(_).map(function(value) {
-        if (value && typeof value.type === 'string') {
-            value.bbox = getExtent(value).bbox();
-            this.update(value);
-        }
-    });
-};
-
-function getExtent(_) {
-    var bbox = [Infinity, Infinity, -Infinity, -Infinity],
-        ext = extent(),
-        coords = geojsonCoords(_);
-    for (var i = 0; i < coords.length; i++) ext.include(coords[i]);
-    return ext;
-}
-
-},{"extent":12,"geojson-coords":15,"traverse":74}],17:[function(require,module,exports){
+},{"./flatten":14,"geojson-flatten":16,"geojson-normalize":17}],16:[function(require,module,exports){
 module.exports = flatten;
 
 function flatten(gj, up) {
@@ -3749,7 +3719,7 @@ function flatten(gj, up) {
     }
 }
 
-},{}],18:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 module.exports = normalize;
 
 var types = {
@@ -3794,7 +3764,41 @@ function normalize(gj) {
     }
 }
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
+var geojsonCoords = require('geojson-coords'),
+    traverse = require('traverse'),
+    extent = require('extent');
+
+module.exports = function(_) {
+    return getExtent(_).bbox();
+};
+
+module.exports.polygon = function(_) {
+    return getExtent(_).polygon();
+};
+
+module.exports.bboxify = function(_) {
+    return traverse(_).map(function(value) {
+        if (value && typeof value.type === 'string') {
+            value.bbox = getExtent(value).bbox();
+            this.update(value);
+        }
+    });
+};
+
+function getExtent(_) {
+    var bbox = [Infinity, Infinity, -Infinity, -Infinity],
+        ext = extent(),
+        coords = geojsonCoords(_);
+    for (var i = 0; i < coords.length; i++) ext.include(coords[i]);
+    return ext;
+}
+
+},{"extent":12,"geojson-coords":15,"traverse":76}],19:[function(require,module,exports){
+arguments[4][16][0].apply(exports,arguments)
+},{"dup":16}],20:[function(require,module,exports){
+arguments[4][17][0].apply(exports,arguments)
+},{"dup":17}],21:[function(require,module,exports){
 module.exports = function(count, type) {
     switch (type) {
         case 'point':
@@ -3813,7 +3817,7 @@ function feature(geom) {
 }
 function collection(f) { return { type: 'FeatureCollection', features: f }; }
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 var geojsonArea = require('geojson-area');
 
 module.exports = rewind;
@@ -3864,7 +3868,7 @@ function cw(_) {
     return geojsonArea.ring(_) >= 0;
 }
 
-},{"geojson-area":13}],21:[function(require,module,exports){
+},{"geojson-area":13}],23:[function(require,module,exports){
 var jsonlint = require('jsonlint-lines');
 
 function hint(str) {
@@ -4183,7 +4187,7 @@ function hint(str) {
 
 module.exports.hint = hint;
 
-},{"jsonlint-lines":22}],22:[function(require,module,exports){
+},{"jsonlint-lines":24}],24:[function(require,module,exports){
 (function (process){
 /* parser generated by jison 0.4.6 */
 /*
@@ -4840,7 +4844,7 @@ if (typeof module !== 'undefined' && require.main === module) {
 }
 }
 }).call(this,require('_process'))
-},{"_process":38,"fs":3,"path":35}],23:[function(require,module,exports){
+},{"_process":40,"fs":3,"path":37}],25:[function(require,module,exports){
 var parseCSV = require('dsv').csv.parse;
 
 /**
@@ -4882,12 +4886,12 @@ function gtfs2geojson(gtfs) {
 
 module.exports = gtfs2geojson;
 
-},{"dsv":24}],24:[function(require,module,exports){
+},{"dsv":26}],26:[function(require,module,exports){
 
 
 module.exports = new Function("dsv.version = \"0.0.4\";\n\ndsv.tsv = dsv(\"\\t\");\ndsv.csv = dsv(\",\");\n\nfunction dsv(delimiter) {\n  var dsv = {},\n      reFormat = new RegExp(\"[\\\"\" + delimiter + \"\\n]\"),\n      delimiterCode = delimiter.charCodeAt(0);\n\n  dsv.parse = function(text, f) {\n    var o;\n    return dsv.parseRows(text, function(row, i) {\n      if (o) return o(row, i - 1);\n      var a = new Function(\"d\", \"return {\" + row.map(function(name, i) {\n        return JSON.stringify(name) + \": d[\" + i + \"]\";\n      }).join(\",\") + \"}\");\n      o = f ? function(row, i) { return f(a(row), i); } : a;\n    });\n  };\n\n  dsv.parseRows = function(text, f) {\n    var EOL = {}, // sentinel value for end-of-line\n        EOF = {}, // sentinel value for end-of-file\n        rows = [], // output rows\n        N = text.length,\n        I = 0, // current character index\n        n = 0, // the current line number\n        t, // the current token\n        eol; // is the current token followed by EOL?\n\n    function token() {\n      if (I >= N) return EOF; // special case: end of file\n      if (eol) return eol = false, EOL; // special case: end of line\n\n      // special case: quotes\n      var j = I;\n      if (text.charCodeAt(j) === 34) {\n        var i = j;\n        while (i++ < N) {\n          if (text.charCodeAt(i) === 34) {\n            if (text.charCodeAt(i + 1) !== 34) break;\n            ++i;\n          }\n        }\n        I = i + 2;\n        var c = text.charCodeAt(i + 1);\n        if (c === 13) {\n          eol = true;\n          if (text.charCodeAt(i + 2) === 10) ++I;\n        } else if (c === 10) {\n          eol = true;\n        }\n        return text.slice(j + 1, i).replace(/\"\"/g, \"\\\"\");\n      }\n\n      // common case: find next delimiter or newline\n      while (I < N) {\n        var c = text.charCodeAt(I++), k = 1;\n        if (c === 10) eol = true; // \\n\n        else if (c === 13) { eol = true; if (text.charCodeAt(I) === 10) ++I, ++k; } // \\r|\\r\\n\n        else if (c !== delimiterCode) continue;\n        return text.slice(j, I - k);\n      }\n\n      // special case: last token before EOF\n      return text.slice(j);\n    }\n\n    while ((t = token()) !== EOF) {\n      var a = [];\n      while (t !== EOL && t !== EOF) {\n        a.push(t);\n        t = token();\n      }\n      if (f && (a = f(a, n++)) == null) continue;\n      rows.push(a);\n    }\n\n    return rows;\n  };\n\n  dsv.format = function(rows) {\n    if (Array.isArray(rows[0])) return dsv.formatRows(rows); // deprecated; use formatRows\n    var fieldSet = {}, fields = [];\n\n    // Compute unique fields in order of discovery.\n    rows.forEach(function(row) {\n      for (var field in row) {\n        if (!(field in fieldSet)) {\n          fields.push(fieldSet[field] = field);\n        }\n      }\n    });\n\n    return [fields.map(formatValue).join(delimiter)].concat(rows.map(function(row) {\n      return fields.map(function(field) {\n        return formatValue(row[field]);\n      }).join(delimiter);\n    })).join(\"\\n\");\n  };\n\n  dsv.formatRows = function(rows) {\n    return rows.map(formatRow).join(\"\\n\");\n  };\n\n  function formatRow(row) {\n    return row.map(formatValue).join(delimiter);\n  }\n\n  function formatValue(text) {\n    return reFormat.test(text) ? \"\\\"\" + text.replace(/\\\"/g, \"\\\"\\\"\") + \"\\\"\" : text;\n  }\n\n  return dsv;\n}\n" + ";return dsv")();
 
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -4973,7 +4977,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*!
  * Determine if an object is a Buffer
  *
@@ -4996,7 +5000,7 @@ function isSlowBuffer (obj) {
   return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
 }
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var spherical = require('spherical'),
     geojsonArea = require('geojson-area');
 
@@ -5041,7 +5045,7 @@ module.exports.area = function(layer) {
     return geojsonArea(gj.geometry);
 };
 
-},{"geojson-area":28,"spherical":41}],28:[function(require,module,exports){
+},{"geojson-area":30,"spherical":43}],30:[function(require,module,exports){
 var wgs84 = require('wgs84');
 
 module.exports = function(_) {
@@ -5103,7 +5107,7 @@ function rad(_) {
     return _ * Math.PI / 180;
 }
 
-},{"wgs84":78}],29:[function(require,module,exports){
+},{"wgs84":80}],31:[function(require,module,exports){
 (function(window) {
 	var HAS_HASHCHANGE = (function() {
 		var doc_mode = window.documentMode;
@@ -5267,7 +5271,7 @@ function rad(_) {
 	};
 })(window);
 
-},{}],30:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (global){
 /**
  * marked - a markdown parser
@@ -6537,7 +6541,7 @@ if (typeof exports === 'object') {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],31:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 var _ = require("./lodash.custom.js");
 var rewind = require("geojson-rewind");
 
@@ -7133,7 +7137,7 @@ osmtogeojson.toGeojson = osmtogeojson;
 
 module.exports = osmtogeojson;
 
-},{"./lodash.custom.js":32,"./polygon_features.json":34,"geojson-rewind":33}],32:[function(require,module,exports){
+},{"./lodash.custom.js":34,"./polygon_features.json":36,"geojson-rewind":35}],34:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -8931,7 +8935,7 @@ module.exports = osmtogeojson;
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],33:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 var geojsonArea = require('geojson-area');
 
 module.exports = rewind;
@@ -8982,7 +8986,7 @@ function cw(_) {
     return geojsonArea.ring(_) >= 0;
 }
 
-},{"geojson-area":13}],34:[function(require,module,exports){
+},{"geojson-area":13}],36:[function(require,module,exports){
 module.exports={
     "building": true,
     "highway": {
@@ -9063,7 +9067,7 @@ module.exports={
     "area:highway": true,
     "craft": true
 }
-},{}],35:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -9291,7 +9295,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":38}],36:[function(require,module,exports){
+},{"_process":40}],38:[function(require,module,exports){
 'use strict';
 
 /**
@@ -9446,7 +9450,7 @@ if (typeof module === 'object' && module.exports) {
     module.exports = polyline;
 }
 
-},{}],37:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 module.exports = function (data) {
     var lines = data.split('\n'),
                 isNameLine = true,
@@ -9512,7 +9516,7 @@ module.exports = function (data) {
     return gj;
 };
 
-},{}],38:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -9698,7 +9702,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],39:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 /*
  * Given a querystring, return an object of that querystring's components.
  *
@@ -9731,7 +9735,7 @@ module.exports.qsString = function(obj, noencode) {
     }).join('&');
 };
 
-},{}],40:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 module.exports = function(x, dims) {
     if (!dims) dims = 'NSEW';
     if (typeof x !== 'string') return null;
@@ -9745,7 +9749,7 @@ module.exports = function(x, dims) {
         ((m[4] && m[4] === 'S' || m[4] === 'W') ? -1 : 1);
 };
 
-},{}],41:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 var wgs84 = require('wgs84');
 
 module.exports.heading = function(from, to) {
@@ -9799,7 +9803,7 @@ function deg(_) {
     return _ * (180 / Math.PI);
 }
 
-},{"wgs84":78}],42:[function(require,module,exports){
+},{"wgs84":80}],44:[function(require,module,exports){
 (function (global){
 ;(function(win){
 	var store = {},
@@ -9967,7 +9971,7 @@ function deg(_) {
 })(this.window || global);
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],43:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 (function (process){
 toGeoJSON = (function() {
     'use strict';
@@ -10206,7 +10210,7 @@ toGeoJSON = (function() {
 if (typeof module !== 'undefined') module.exports = toGeoJSON;
 
 }).call(this,require('_process'))
-},{"_process":38,"xmldom":2}],44:[function(require,module,exports){
+},{"_process":40,"xmldom":2}],46:[function(require,module,exports){
 var type = require("./type"),
     topojson = require("../../");
 
@@ -10236,7 +10240,7 @@ module.exports = function(topology, propertiesById) {
 
 function noop() {}
 
-},{"../../":"topojson","./type":72}],45:[function(require,module,exports){
+},{"../../":"topojson","./type":74}],47:[function(require,module,exports){
 
 // Computes the bounding box of the specified hash of GeoJSON objects.
 module.exports = function(objects) {
@@ -10283,7 +10287,7 @@ module.exports = function(objects) {
   return [x0, y0, x1, y1];
 };
 
-},{}],46:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 exports.name = "cartesian";
 exports.formatDistance = formatDistance;
 exports.ringArea = ringArea;
@@ -10323,7 +10327,7 @@ function distance(x0, y0, x1, y1) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-},{}],47:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 var type = require("./type"),
     systems = require("./coordinate-systems"),
     topojson = require("../../");
@@ -10414,7 +10418,7 @@ function clockwisePolygonSystem(ringArea, reverse) {
 
 function noop() {}
 
-},{"../../":"topojson","./coordinate-systems":49,"./type":72}],48:[function(require,module,exports){
+},{"../../":"topojson","./coordinate-systems":51,"./type":74}],50:[function(require,module,exports){
 // Given a hash of GeoJSON objects and an id function, invokes the id function
 // to compute a new id for each object that is a feature. The function is passed
 // the feature and is expected to return the new feature id, or null if the
@@ -10444,13 +10448,13 @@ module.exports = function(objects, id) {
   return objects;
 };
 
-},{}],49:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 module.exports = {
   cartesian: require("./cartesian"),
   spherical: require("./spherical")
 };
 
-},{"./cartesian":46,"./spherical":59}],50:[function(require,module,exports){
+},{"./cartesian":48,"./spherical":61}],52:[function(require,module,exports){
 // Given a TopoJSON topology in absolute (quantized) coordinates,
 // converts to fixed-point delta encoding.
 // This is a destructive operation that modifies the given topology!
@@ -10481,7 +10485,7 @@ module.exports = function(topology) {
   return topology;
 };
 
-},{}],51:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 var type = require("./type"),
     prune = require("./prune"),
     clockwise = require("./clockwise"),
@@ -10610,7 +10614,7 @@ function preserveNone() {
   return false;
 }
 
-},{"../../":"topojson","./clockwise":47,"./coordinate-systems":49,"./prune":55,"./type":72}],52:[function(require,module,exports){
+},{"../../":"topojson","./clockwise":49,"./coordinate-systems":51,"./prune":57,"./type":74}],54:[function(require,module,exports){
 // Given a hash of GeoJSON objects, replaces Features with geometry objects.
 // This is a destructive operation that modifies the input objects!
 module.exports = function(objects) {
@@ -10729,7 +10733,7 @@ module.exports = function(objects) {
   return objects;
 };
 
-},{}],53:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 var quantize = require("./quantize");
 
 module.exports = function(topology, Q0, Q1) {
@@ -10777,7 +10781,7 @@ module.exports = function(topology, Q0, Q1) {
   return topology;
 };
 
-},{"./quantize":56}],54:[function(require,module,exports){
+},{"./quantize":58}],56:[function(require,module,exports){
 var quantize = require("./quantize");
 
 module.exports = function(objects, bbox, Q0, Q1) {
@@ -10836,7 +10840,7 @@ module.exports = function(objects, bbox, Q0, Q1) {
   return q.transform;
 };
 
-},{"./quantize":56}],55:[function(require,module,exports){
+},{"./quantize":58}],57:[function(require,module,exports){
 module.exports = function(topology, options) {
   var verbose = false,
       objects = topology.objects,
@@ -10893,7 +10897,7 @@ module.exports = function(topology, options) {
 
 function noop() {}
 
-},{}],56:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 module.exports = function(dx, dy, kx, ky) {
 
   function quantizePoint(coordinates) {
@@ -10937,7 +10941,7 @@ module.exports = function(dx, dy, kx, ky) {
   };
 };
 
-},{}],57:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 var type = require("./type");
 
 module.exports = function(topology, options) {
@@ -11017,7 +11021,7 @@ module.exports = function(topology, options) {
 
 function noop() {}
 
-},{"./type":72}],58:[function(require,module,exports){
+},{"./type":74}],60:[function(require,module,exports){
 var topojson = require("../../"),
     systems = require("./coordinate-systems");
 
@@ -11126,7 +11130,7 @@ module.exports = function(topology, options) {
   return topology;
 };
 
-},{"../../":"topojson","./coordinate-systems":49}],59:[function(require,module,exports){
+},{"../../":"topojson","./coordinate-systems":51}],61:[function(require,module,exports){
 var π = Math.PI,
     π_4 = π / 4,
     radians = π / 180;
@@ -11207,7 +11211,7 @@ function haversin(x) {
   return (x = Math.sin(x / 2)) * x;
 }
 
-},{}],60:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 var type = require("./type");
 
 module.exports = function(objects, transform) {
@@ -11390,7 +11394,7 @@ module.exports = function(objects, transform) {
   }
 };
 
-},{"./type":72}],61:[function(require,module,exports){
+},{"./type":74}],63:[function(require,module,exports){
 var type = require("./type"),
     stitch = require("./stitch"),
     systems = require("./coordinate-systems"),
@@ -11503,7 +11507,7 @@ module.exports = function(objects, options) {
   return topology;
 };
 
-},{"./bounds":45,"./compute-id":48,"./coordinate-systems":49,"./delta":50,"./geomify":52,"./post-quantize":53,"./pre-quantize":54,"./stitch":60,"./topology/index":67,"./transform-properties":71,"./type":72}],62:[function(require,module,exports){
+},{"./bounds":47,"./compute-id":50,"./coordinate-systems":51,"./delta":52,"./geomify":54,"./post-quantize":55,"./pre-quantize":56,"./stitch":62,"./topology/index":69,"./transform-properties":73,"./type":74}],64:[function(require,module,exports){
 var join = require("./join");
 
 // Given an extracted (pre-)topology, cuts (or rotates) arcs so that all shared
@@ -11565,7 +11569,7 @@ function reverse(array, start, end) {
   }
 }
 
-},{"./join":68}],63:[function(require,module,exports){
+},{"./join":70}],65:[function(require,module,exports){
 var join = require("./join"),
     hashmap = require("./hashmap"),
     hashPoint = require("./point-hash"),
@@ -11751,7 +11755,7 @@ module.exports = function(topology) {
   return topology;
 };
 
-},{"./hashmap":65,"./join":68,"./point-equal":69,"./point-hash":70}],64:[function(require,module,exports){
+},{"./hashmap":67,"./join":70,"./point-equal":71,"./point-hash":72}],66:[function(require,module,exports){
 // Extracts the lines and rings from the specified hash of geometry objects.
 //
 // Returns an object with three properties:
@@ -11818,7 +11822,7 @@ module.exports = function(objects) {
   };
 };
 
-},{}],65:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 module.exports = function(size, hash, equal, keyType, keyEmpty, valueType) {
   if (arguments.length === 3) {
     keyType = valueType = Array;
@@ -11893,7 +11897,7 @@ module.exports = function(size, hash, equal, keyType, keyEmpty, valueType) {
   };
 };
 
-},{}],66:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 module.exports = function(size, hash, equal, type, empty) {
   if (arguments.length === 3) {
     type = Array;
@@ -11950,7 +11954,7 @@ module.exports = function(size, hash, equal, type, empty) {
   };
 };
 
-},{}],67:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 var hashmap = require("./hashmap"),
     extract = require("./extract"),
     cut = require("./cut"),
@@ -12020,7 +12024,7 @@ function equalArc(arcA, arcB) {
   return ia === ib && ja === jb;
 }
 
-},{"./cut":62,"./dedup":63,"./extract":64,"./hashmap":65}],68:[function(require,module,exports){
+},{"./cut":64,"./dedup":65,"./extract":66,"./hashmap":67}],70:[function(require,module,exports){
 var hashset = require("./hashset"),
     hashmap = require("./hashmap"),
     hashPoint = require("./point-hash"),
@@ -12135,12 +12139,12 @@ module.exports = function(topology) {
   return junctionByPoint;
 };
 
-},{"./hashmap":65,"./hashset":66,"./point-equal":69,"./point-hash":70}],69:[function(require,module,exports){
+},{"./hashmap":67,"./hashset":68,"./point-equal":71,"./point-hash":72}],71:[function(require,module,exports){
 module.exports = function(pointA, pointB) {
   return pointA[0] === pointB[0] && pointA[1] === pointB[1];
 };
 
-},{}],70:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 // TODO if quantized, use simpler Int32 hashing?
 
 var buffer = new ArrayBuffer(16),
@@ -12155,7 +12159,7 @@ module.exports = function(point) {
   return hash & 0x7fffffff;
 };
 
-},{}],71:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 // Given a hash of GeoJSON objects, transforms any properties on features using
 // the specified transform function. The function is invoked for each existing
 // property on the current feature, being passed the new properties hash, the
@@ -12200,7 +12204,7 @@ module.exports = function(objects, propertyTransform) {
   return objects;
 };
 
-},{}],72:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 module.exports = function(types) {
   for (var type in typeDefaults) {
     if (!(type in types)) {
@@ -12294,7 +12298,7 @@ var typeObjects = {
   FeatureCollection: 1
 };
 
-},{}],73:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 !function() {
   var topojson = {
     version: "1.6.8",
@@ -12828,7 +12832,7 @@ var typeObjects = {
   else this.topojson = topojson;
 }();
 
-},{}],74:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
 var traverse = module.exports = function (obj) {
     return new Traverse(obj);
 };
@@ -13144,7 +13148,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     return key in obj;
 };
 
-},{}],75:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -13169,14 +13173,14 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],76:[function(require,module,exports){
+},{}],78:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],77:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -13766,12 +13770,12 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":76,"_process":38,"inherits":75}],78:[function(require,module,exports){
+},{"./support/isBuffer":78,"_process":40,"inherits":77}],80:[function(require,module,exports){
 module.exports.RADIUS = 6378137;
 module.exports.FLATTENING = 1/298.257223563;
 module.exports.POLAR_RADIUS = 6356752.3142;
 
-},{}],79:[function(require,module,exports){
+},{}],81:[function(require,module,exports){
 (function (Buffer){
 module.exports = BinaryReader;
 
@@ -13822,7 +13826,7 @@ BinaryReader.prototype.readVarInt = function () {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":4}],80:[function(require,module,exports){
+},{"buffer":4}],82:[function(require,module,exports){
 (function (Buffer){
 module.exports = BinaryWriter;
 
@@ -13891,7 +13895,7 @@ BinaryWriter.prototype.ensureSize = function (size) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":4}],81:[function(require,module,exports){
+},{"buffer":4}],83:[function(require,module,exports){
 (function (Buffer){
 module.exports = Geometry;
 
@@ -14272,7 +14276,7 @@ Geometry.prototype.toGeoJSON = function (options) {
 };
 
 }).call(this,{"isBuffer":require("../../is-buffer/index.js")})
-},{"../../is-buffer/index.js":26,"./binaryreader":79,"./binarywriter":80,"./geometrycollection":82,"./linestring":83,"./multilinestring":84,"./multipoint":85,"./multipolygon":86,"./point":87,"./polygon":88,"./types":89,"./wktparser":90,"./zigzag.js":92}],82:[function(require,module,exports){
+},{"../../is-buffer/index.js":28,"./binaryreader":81,"./binarywriter":82,"./geometrycollection":84,"./linestring":85,"./multilinestring":86,"./multipoint":87,"./multipolygon":88,"./point":89,"./polygon":90,"./types":91,"./wktparser":92,"./zigzag.js":94}],84:[function(require,module,exports){
 module.exports = GeometryCollection;
 
 var util = require('util');
@@ -14442,7 +14446,7 @@ GeometryCollection.prototype.toGeoJSON = function (options) {
     return geoJSON;
 };
 
-},{"./binarywriter":80,"./geometry":81,"./types":89,"util":77}],83:[function(require,module,exports){
+},{"./binarywriter":82,"./geometry":83,"./types":91,"util":79}],85:[function(require,module,exports){
 module.exports = LineString;
 
 var util = require('util');
@@ -14621,7 +14625,7 @@ LineString.prototype.toGeoJSON = function (options) {
     return geoJSON;
 };
 
-},{"./binarywriter":80,"./geometry":81,"./point":87,"./types":89,"util":77}],84:[function(require,module,exports){
+},{"./binarywriter":82,"./geometry":83,"./point":89,"./types":91,"util":79}],86:[function(require,module,exports){
 module.exports = MultiLineString;
 
 var util = require('util');
@@ -14811,7 +14815,7 @@ MultiLineString.prototype.toGeoJSON = function (options) {
     return geoJSON;
 };
 
-},{"./binarywriter":80,"./geometry":81,"./linestring":83,"./point":87,"./types":89,"util":77}],85:[function(require,module,exports){
+},{"./binarywriter":82,"./geometry":83,"./linestring":85,"./point":89,"./types":91,"util":79}],87:[function(require,module,exports){
 module.exports = MultiPoint;
 
 var util = require('util');
@@ -14984,7 +14988,7 @@ MultiPoint.prototype.toGeoJSON = function (options) {
     return geoJSON;
 };
 
-},{"./binarywriter":80,"./geometry":81,"./point":87,"./types":89,"util":77}],86:[function(require,module,exports){
+},{"./binarywriter":82,"./geometry":83,"./point":89,"./types":91,"util":79}],88:[function(require,module,exports){
 module.exports = MultiPolygon;
 
 var util = require('util');
@@ -15211,7 +15215,7 @@ MultiPolygon.prototype.toGeoJSON = function (options) {
     return geoJSON;
 };
 
-},{"./binarywriter":80,"./geometry":81,"./point":87,"./polygon":88,"./types":89,"util":77}],87:[function(require,module,exports){
+},{"./binarywriter":82,"./geometry":83,"./point":89,"./polygon":90,"./types":91,"util":79}],89:[function(require,module,exports){
 module.exports = Point;
 
 var util = require('util');
@@ -15429,7 +15433,7 @@ Point.prototype.toGeoJSON = function (options) {
     return geoJSON;
 };
 
-},{"./binarywriter":80,"./geometry":81,"./types":89,"./zigzag.js":92,"util":77}],88:[function(require,module,exports){
+},{"./binarywriter":82,"./geometry":83,"./types":91,"./zigzag.js":94,"util":79}],90:[function(require,module,exports){
 module.exports = Polygon;
 
 var util = require('util');
@@ -15718,7 +15722,7 @@ Polygon.prototype.toGeoJSON = function (options) {
     return geoJSON;
 };
 
-},{"./binarywriter":80,"./geometry":81,"./point":87,"./types":89,"util":77}],89:[function(require,module,exports){
+},{"./binarywriter":82,"./geometry":83,"./point":89,"./types":91,"util":79}],91:[function(require,module,exports){
 module.exports = {
     wkt: {
         Point: 'POINT',
@@ -15749,7 +15753,7 @@ module.exports = {
     }
 };
 
-},{}],90:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 module.exports = WktParser;
 
 var Types = require('./types');
@@ -15875,7 +15879,7 @@ WktParser.prototype.skipWhitespaces = function () {
         this.position++;
 };
 
-},{"./point":87,"./types":89}],91:[function(require,module,exports){
+},{"./point":89,"./types":91}],93:[function(require,module,exports){
 exports.Types = require('./types');
 exports.Geometry = require('./geometry');
 exports.Point = require('./point');
@@ -15885,7 +15889,7 @@ exports.MultiPoint = require('./multipoint');
 exports.MultiLineString = require('./multilinestring');
 exports.MultiPolygon = require('./multipolygon');
 exports.GeometryCollection = require('./geometrycollection');
-},{"./geometry":81,"./geometrycollection":82,"./linestring":83,"./multilinestring":84,"./multipoint":85,"./multipolygon":86,"./point":87,"./polygon":88,"./types":89}],92:[function(require,module,exports){
+},{"./geometry":83,"./geometrycollection":84,"./linestring":85,"./multilinestring":86,"./multipoint":87,"./multipolygon":88,"./point":89,"./polygon":90,"./types":91}],94:[function(require,module,exports){
 module.exports = {
     encode: function (value) {
         return (value << 1) ^ (value >> 31);
@@ -15895,7 +15899,7 @@ module.exports = {
     }
 };
 
-},{}],93:[function(require,module,exports){
+},{}],95:[function(require,module,exports){
 module.exports = extend
 
 function extend() {
@@ -15914,12 +15918,13 @@ function extend() {
     return target
 }
 
-},{}],94:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 module.exports={
   "port": 8085,
   "localDir": "../nur-die-tat-karte"
 }
-},{}],95:[function(require,module,exports){
+
+},{}],97:[function(require,module,exports){
 module.exports = function(hostname) {
     // Settings for geojson.io
     L.mapbox.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXFhYTA2bTMyeW44ZG0ybXBkMHkifQ.gUGbDOPUN1v1fTs5SeOR4A';
@@ -15944,7 +15949,7 @@ module.exports = function(hostname) {
     }
 };
 
-},{}],96:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 module.exports = api;
 
 function api(context) {
@@ -15990,7 +15995,7 @@ function api(context) {
     };
 }
 
-},{}],97:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 var clone = require('clone'),
     xtend = require('xtend'),
     config = require('../config.js')(location.hostname),
@@ -16264,7 +16269,7 @@ module.exports = function(context) {
     return data;
 };
 
-},{"../config.js":95,"../source/local_server":117,"clone":6,"xtend":93}],98:[function(require,module,exports){
+},{"../config.js":97,"../source/local_server":119,"clone":6,"xtend":95}],100:[function(require,module,exports){
 var qs = require('qs-hash'),
     zoomextent = require('../lib/zoomextent'),
     flash = require('../ui/flash');
@@ -16350,7 +16355,7 @@ module.exports = function(context) {
     };
 };
 
-},{"../lib/zoomextent":111,"../ui/flash":120,"qs-hash":39}],99:[function(require,module,exports){
+},{"../lib/zoomextent":113,"../ui/flash":122,"qs-hash":41}],101:[function(require,module,exports){
 var zoomextent = require('../lib/zoomextent'),
     qs = require('qs-hash');
 
@@ -16393,7 +16398,7 @@ module.exports = function(context) {
     }
 };
 
-},{"../lib/zoomextent":111,"qs-hash":39}],100:[function(require,module,exports){
+},{"../lib/zoomextent":113,"qs-hash":41}],102:[function(require,module,exports){
 var config = require('../config.js')(location.hostname);
 
 module.exports = function(context) {
@@ -16437,7 +16442,7 @@ module.exports = function(context) {
     return repo;
 };
 
-},{"../config.js":95}],101:[function(require,module,exports){
+},{"../config.js":97}],103:[function(require,module,exports){
 var qs = require('qs-hash'),
     xtend = require('xtend');
 
@@ -16504,7 +16509,7 @@ module.exports = function(context) {
     return router;
 };
 
-},{"qs-hash":39,"xtend":93}],102:[function(require,module,exports){
+},{"qs-hash":41,"xtend":95}],104:[function(require,module,exports){
 var config = require('../config.js')(location.hostname);
 
 module.exports = function(context) {
@@ -16592,7 +16597,7 @@ module.exports = function(context) {
     return user;
 };
 
-},{"../config.js":95}],103:[function(require,module,exports){
+},{"../config.js":97}],105:[function(require,module,exports){
 var ui = require('./ui'),
     map = require('./ui/map'),
     data = require('./core/data'),
@@ -16628,7 +16633,7 @@ function geojsonIO() {
 }
 
 
-},{"./core/api":96,"./core/data":97,"./core/loader":98,"./core/recovery":99,"./core/repo":100,"./core/router":101,"./core/user":102,"./ui":118,"./ui/map":122,"store":42}],104:[function(require,module,exports){
+},{"./core/api":98,"./core/data":99,"./core/loader":100,"./core/recovery":101,"./core/repo":102,"./core/router":103,"./core/user":104,"./ui":120,"./ui/map":124,"store":44}],106:[function(require,module,exports){
 var qs = require('qs-hash');
 require('leaflet-hash');
 
@@ -16667,7 +16672,7 @@ L.Hash.prototype.formatHash = function(map) {
                 return '#' + qs.qsString(query);
 };
 
-},{"leaflet-hash":29,"qs-hash":39}],105:[function(require,module,exports){
+},{"leaflet-hash":31,"qs-hash":41}],107:[function(require,module,exports){
 geojsonNormalize = require('geojson-normalize');
 
 module.exports = function (geojson) {
@@ -16688,10 +16693,11 @@ function updateFeatureIds(features) {
   features.filter(function (f) {
       return f.id == null;
     }).forEach(function (f) {
-      f.id = ++maxId;
+      f.id = Math.max(Date.now(), maxId + 1);
+      maxId = f.id;
     });
 }
-},{"geojson-normalize":18}],106:[function(require,module,exports){
+},{"geojson-normalize":20}],108:[function(require,module,exports){
 (function (Buffer){
 var escape = require('escape-html'),
     geojsonRandom = require('geojson-random'),
@@ -16786,7 +16792,7 @@ module.exports.wkxString = function(context) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"../lib/zoomextent":111,"buffer":4,"escape-html":11,"geojson-extent":16,"geojson-flatten":17,"geojson-random":19,"polyline":36,"wkx":91}],107:[function(require,module,exports){
+},{"../lib/zoomextent":113,"buffer":4,"escape-html":11,"geojson-extent":18,"geojson-flatten":19,"geojson-random":21,"polyline":38,"wkx":93}],109:[function(require,module,exports){
 module.exports = function(context) {
     return function(e) {
         var sel = d3.select(e.popup._contentNode);
@@ -16851,7 +16857,7 @@ module.exports = function(context) {
     };
 };
 
-},{}],108:[function(require,module,exports){
+},{}],110:[function(require,module,exports){
 var topojson = require('topojson'),
     toGeoJSON = require('togeojson'),
     gtfs2geojson = require('gtfs2geojson'),
@@ -17044,7 +17050,7 @@ function readFile(f, text, callback) {
     }
 }
 
-},{"./geojson-normalize":105,"csv2geojson":7,"gtfs2geojson":23,"osmtogeojson":31,"polytogeojson":37,"togeojson":43,"topojson":"topojson"}],109:[function(require,module,exports){
+},{"./geojson-normalize":107,"csv2geojson":7,"gtfs2geojson":25,"osmtogeojson":33,"polytogeojson":39,"togeojson":45,"topojson":"topojson"}],111:[function(require,module,exports){
 module.exports = function(map, feature, bounds) {
     var zoomLevel;
 
@@ -17056,7 +17062,7 @@ module.exports = function(map, feature, bounds) {
     }
 };
 
-},{}],110:[function(require,module,exports){
+},{}],112:[function(require,module,exports){
 var geojsonhint = require('geojsonhint');
 
 module.exports = function(callback) {
@@ -17117,13 +17123,13 @@ module.exports = function(callback) {
     };
 };
 
-},{"geojsonhint":21}],111:[function(require,module,exports){
+},{"geojsonhint":23}],113:[function(require,module,exports){
 module.exports = function(context) {
     var bounds = context.mapLayer.getBounds();
     if (bounds.isValid()) context.map.fitBounds(bounds);
 };
 
-},{}],112:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 /* eslint-disable linebreak-style */
 
 module.exports = {
@@ -17265,15 +17271,15 @@ function createTable(keys) {
   return table;
 }
 
-},{}],113:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 (function (Buffer){
 
 var marked = require('marked');
 
 module.exports = function(context) {
-    var html = Buffer("PGgyPkhlbHA8L2gyPgoKPHA+TmV3IGhlcmU/IDxzdHJvbmc+Z2VvanNvbi5pbzwvc3Ryb25nPiBpcyBhIHF1aWNrLCBzaW1wbGUgdG9vbCBmb3IgY3JlYXRpbmcsCnZpZXdpbmcsIGFuZCBzaGFyaW5nIG1hcHMuIGdlb2pzb24uaW8gaXMgbmFtZWQgYWZ0ZXIgPGEgaHJlZj0naHR0cDovL2dlb2pzb24ub3JnLycgdGFyZ2V0PSdfYmxhbmsnPkdlb0pTT048L2E+LAphbiBvcGVuIHNvdXJjZSBkYXRhIGZvcm1hdCwgYW5kIGl0IHN1cHBvcnRzIEdlb0pTT04gaW4gYWxsIHdheXMgLSBidXQgYWxzbwphY2NlcHRzIEtNTCwgR1BYLCBDU1YsIEdURlMsIFRvcG9KU09OLCBhbmQgb3RoZXIgZm9ybWF0cy48L3A+Cgo8cD5OZWVkIGV4dHJhIGhlbHAgb3Igc2VlIGEgYnVnPyA8YSB0YXJnZXQ9J19ibGFuaycgaHJlZj0naHR0cHM6Ly9naXRodWIuY29tL21hcGJveC9nZW9qc29uLmlvL2lzc3Vlcz9zdGF0ZT1vcGVuJz5PcGVuIGFuIGlzc3VlCiAgICBvbiBnZW9qc29uLmlvJ3MgaXNzdWUgdHJhY2tlci48L2E+Cgo8aDM+SSd2ZSBnb3QgZGF0YTwvaDM+Cgo8cD5JZiB5b3UgaGF2ZSBkYXRhLCBsaWtlIGEgS01MLCBHZW9KU09OLCBvciBDU1YgZmlsZSwganVzdCBkcmFnICZhbXA7IGRyb3AKaXQgb250byB0aGUgcGFnZSBvciBjbGljayAnT3BlbicgYW5kICdGaWxlJyAtIHlvdXIgZGF0YSBzaG91bGQgYXBwZWFyIG9uCnRoZSBtYXAhPC9wPgoKPGgzPkkgd2FudCB0byBkcmF3IGZlYXR1cmVzPC9oMz4KCjxwPkNsaWNrIHRoZSBkcmF3aW5nIHRvb2xzIG9uIHRoZSBsZWZ0LWhhbmQgc2lkZSB0byBkcmF3IHBvaW50cywgcG9seWdvbnMsCmxpbmVzIGFuZCByZWN0YW5nbGVzLiBBZnRlciB5b3UncmUgZG9uZSBkcmF3aW5nIHRoZSBzaGFwZXMsIHlvdSBjYW4gYWRkCmluZm9ybWF0aW9uIHRvIGVhY2ggZmVhdHVyZSBieSBjbGlja2luZyBvbiBpdCwgZWRpdGluZyB0aGUgZmVhdHVyZSdzIHByb3BlcnRpZXMsCmFuZCBjbGlja2luZyAnU2F2ZScuPC9wPgoKPHA+UHJvcGVydGllcyBpbiBHZW9KU09OIGFyZSBzdG9yZWQgYXMgJ2tleSB2YWx1ZSBwYWlycycgLSBzbywgZm9yIGluc3RhbmNlLAppZiB5b3Ugd2FudGVkIHRvIGFkZCBhIG5hbWUgdG8gZWFjaCBmZWF0dXJlLCB0eXBlICduYW1lJyBpbiB0aGUgZmlyc3QgdGFibGUKZmllbGQsIGFuZCB0aGUgbmFtZSBvZiB0aGUgZmVhdHVyZSBpbiB0aGUgc2Vjb25kLjwvcD4KCjxoMz5JIHdhbnQgdG8gdXNlIG15IG1hcCBldmVyeXdoZXJlPC9oMz4KCjxwPllvdSBjYW4gc2hhcmUgbWFwcyBpbiBxdWl0ZSBhIGZldyB3YXlzISBJZiB5b3Ugc2F2ZSB5b3VyIG1hcCBoZXJlLCB0aGUgVVJMCm9mIHRoaXMgcGFnZSB3aWxsIHVwZGF0ZSBhbmQgeW91IGNhbiBsaW5rIHNlbmQgZnJpZW5kcyB0aGUgbGluayB0byBzaGFyZQp0aGUgbWFwLCBvciB5b3UgY2FuIGNsaWNrICdEb3dubG9hZCcgdG8gZ3JhYiB0aGUgcmF3IEdlb0pTT04gZGF0YSBhbmQgdXNlCml0IGluIG90aGVyIHNvZnR3YXJlLCBsaWtlIFRpbGVNaWxsIG9yIExlYWZsZXQuPC9wPgoKPGgzPkknbSBhIGNvZGVyPC9oMz4KCjxwPjxhIGhyZWY9JyNnZW9qc29uLWlvLWFwaSc+Z2VvanNvbi5pbyBoYXMgYW4gYXJyYXkgb2YgY2xpIHRvb2xzPC9hPgp0aGF0IG1ha2UgaXQgZWFzeSB0byBnbyBmcm9tIGEgR2VvSlNPTiBmaWxlIG9uIHlvdXIgY29tcHV0ZXIgdG8gZ2VvanNvbi5pby4KCjxoMz5Qcm90aXBzPzwvaDM+Cgo8dWw+CiAgICA8bGk+PHN0cm9uZz5jbWQrczwvc3Ryb25nPjogc2F2ZSBtYXAgdG8gZ2l0aHViIGdpc3RzCiAgICA8bGk+PHN0cm9uZz5jbWQrYTwvc3Ryb25nPjogZG93bmxvYWQgbWFwIGFzIGdlb2pzb24KICAgIDxsaT48c3Ryb25nPmFycm93IGtleXM8L3N0cm9uZz46IG5hdmlnYXRlIHRoZSBtYXAKPC91bD4KCjxoMz5Qcml2YWN5ICZhbXA7IExpY2Vuc2UgSXNzdWVzPC9oMz4KCjx1bD4KICAgIDxsaT48c3Ryb25nPkNsaWNraW5nIHNhdmU8L3N0cm9uZz4gYnkgZGVmYXVsdCBzYXZlcyB0byBhIHByaXZhdGUKICAgIEdpdEh1YiBHaXN0IC0gc28gaXQgd2lsbCBvbmx5IGJlIGFjY2Vzc2libGUgdG8gcGVvcGxlIHlvdSBzaGFyZSB0aGUgVVJMCiAgICB3aXRoLCBhbmQgY3JlYXRpbmcgaXQgd29uJ3QgYXBwZWFyIGluIHlvdXIgR2l0SHViIHRpbWVsaW5lLgogICAgPGxpPjxzdHJvbmc+VGhlIGRhdGEgeW91IGNyZWF0ZSBhbmQgbW9kaWZ5IGluIGdlb2pzb24uaW88L3N0cm9uZz4gZG9lc24ndAogICAgYWNxdWlyZSBhbnkgYWRkaXRpb25hbCBsaWNlbnNlOiBpZiBpdCdzIHNlY3JldCBhbmQgY29weXJpZ2h0ZWQsIGl0IHdpbGwgcmVtYWluCiAgICB0aGF0IHdheSAtIGl0IGRvZXNuJ3QgaGF2ZSB0byBiZSBwdWJsaWMgb3Igb3BlbiBzb3VyY2UuCjwvdWw+Cg==","base64") +
+    var html = Buffer("PGgyPkhlbHA8L2gyPg0KDQo8cD5OZXcgaGVyZT8gPHN0cm9uZz5nZW9qc29uLmlvPC9zdHJvbmc+IGlzIGEgcXVpY2ssIHNpbXBsZSB0b29sIGZvciBjcmVhdGluZywNCnZpZXdpbmcsIGFuZCBzaGFyaW5nIG1hcHMuIGdlb2pzb24uaW8gaXMgbmFtZWQgYWZ0ZXIgPGEgaHJlZj0naHR0cDovL2dlb2pzb24ub3JnLycgdGFyZ2V0PSdfYmxhbmsnPkdlb0pTT048L2E+LA0KYW4gb3BlbiBzb3VyY2UgZGF0YSBmb3JtYXQsIGFuZCBpdCBzdXBwb3J0cyBHZW9KU09OIGluIGFsbCB3YXlzIC0gYnV0IGFsc28NCmFjY2VwdHMgS01MLCBHUFgsIENTViwgR1RGUywgVG9wb0pTT04sIGFuZCBvdGhlciBmb3JtYXRzLjwvcD4NCg0KPHA+TmVlZCBleHRyYSBoZWxwIG9yIHNlZSBhIGJ1Zz8gPGEgdGFyZ2V0PSdfYmxhbmsnIGhyZWY9J2h0dHBzOi8vZ2l0aHViLmNvbS9tYXBib3gvZ2VvanNvbi5pby9pc3N1ZXM/c3RhdGU9b3Blbic+T3BlbiBhbiBpc3N1ZQ0KICAgIG9uIGdlb2pzb24uaW8ncyBpc3N1ZSB0cmFja2VyLjwvYT4NCg0KPGgzPkkndmUgZ290IGRhdGE8L2gzPg0KDQo8cD5JZiB5b3UgaGF2ZSBkYXRhLCBsaWtlIGEgS01MLCBHZW9KU09OLCBvciBDU1YgZmlsZSwganVzdCBkcmFnICZhbXA7IGRyb3ANCml0IG9udG8gdGhlIHBhZ2Ugb3IgY2xpY2sgJ09wZW4nIGFuZCAnRmlsZScgLSB5b3VyIGRhdGEgc2hvdWxkIGFwcGVhciBvbg0KdGhlIG1hcCE8L3A+DQoNCjxoMz5JIHdhbnQgdG8gZHJhdyBmZWF0dXJlczwvaDM+DQoNCjxwPkNsaWNrIHRoZSBkcmF3aW5nIHRvb2xzIG9uIHRoZSBsZWZ0LWhhbmQgc2lkZSB0byBkcmF3IHBvaW50cywgcG9seWdvbnMsDQpsaW5lcyBhbmQgcmVjdGFuZ2xlcy4gQWZ0ZXIgeW91J3JlIGRvbmUgZHJhd2luZyB0aGUgc2hhcGVzLCB5b3UgY2FuIGFkZA0KaW5mb3JtYXRpb24gdG8gZWFjaCBmZWF0dXJlIGJ5IGNsaWNraW5nIG9uIGl0LCBlZGl0aW5nIHRoZSBmZWF0dXJlJ3MgcHJvcGVydGllcywNCmFuZCBjbGlja2luZyAnU2F2ZScuPC9wPg0KDQo8cD5Qcm9wZXJ0aWVzIGluIEdlb0pTT04gYXJlIHN0b3JlZCBhcyAna2V5IHZhbHVlIHBhaXJzJyAtIHNvLCBmb3IgaW5zdGFuY2UsDQppZiB5b3Ugd2FudGVkIHRvIGFkZCBhIG5hbWUgdG8gZWFjaCBmZWF0dXJlLCB0eXBlICduYW1lJyBpbiB0aGUgZmlyc3QgdGFibGUNCmZpZWxkLCBhbmQgdGhlIG5hbWUgb2YgdGhlIGZlYXR1cmUgaW4gdGhlIHNlY29uZC48L3A+DQoNCjxoMz5JIHdhbnQgdG8gdXNlIG15IG1hcCBldmVyeXdoZXJlPC9oMz4NCg0KPHA+WW91IGNhbiBzaGFyZSBtYXBzIGluIHF1aXRlIGEgZmV3IHdheXMhIElmIHlvdSBzYXZlIHlvdXIgbWFwIGhlcmUsIHRoZSBVUkwNCm9mIHRoaXMgcGFnZSB3aWxsIHVwZGF0ZSBhbmQgeW91IGNhbiBsaW5rIHNlbmQgZnJpZW5kcyB0aGUgbGluayB0byBzaGFyZQ0KdGhlIG1hcCwgb3IgeW91IGNhbiBjbGljayAnRG93bmxvYWQnIHRvIGdyYWIgdGhlIHJhdyBHZW9KU09OIGRhdGEgYW5kIHVzZQ0KaXQgaW4gb3RoZXIgc29mdHdhcmUsIGxpa2UgVGlsZU1pbGwgb3IgTGVhZmxldC48L3A+DQoNCjxoMz5JJ20gYSBjb2RlcjwvaDM+DQoNCjxwPjxhIGhyZWY9JyNnZW9qc29uLWlvLWFwaSc+Z2VvanNvbi5pbyBoYXMgYW4gYXJyYXkgb2YgY2xpIHRvb2xzPC9hPg0KdGhhdCBtYWtlIGl0IGVhc3kgdG8gZ28gZnJvbSBhIEdlb0pTT04gZmlsZSBvbiB5b3VyIGNvbXB1dGVyIHRvIGdlb2pzb24uaW8uDQoNCjxoMz5Qcm90aXBzPzwvaDM+DQoNCjx1bD4NCiAgICA8bGk+PHN0cm9uZz5jbWQrczwvc3Ryb25nPjogc2F2ZSBtYXAgdG8gZ2l0aHViIGdpc3RzDQogICAgPGxpPjxzdHJvbmc+Y21kK2E8L3N0cm9uZz46IGRvd25sb2FkIG1hcCBhcyBnZW9qc29uDQogICAgPGxpPjxzdHJvbmc+YXJyb3cga2V5czwvc3Ryb25nPjogbmF2aWdhdGUgdGhlIG1hcA0KPC91bD4NCg0KPGgzPlByaXZhY3kgJmFtcDsgTGljZW5zZSBJc3N1ZXM8L2gzPg0KDQo8dWw+DQogICAgPGxpPjxzdHJvbmc+Q2xpY2tpbmcgc2F2ZTwvc3Ryb25nPiBieSBkZWZhdWx0IHNhdmVzIHRvIGEgcHJpdmF0ZQ0KICAgIEdpdEh1YiBHaXN0IC0gc28gaXQgd2lsbCBvbmx5IGJlIGFjY2Vzc2libGUgdG8gcGVvcGxlIHlvdSBzaGFyZSB0aGUgVVJMDQogICAgd2l0aCwgYW5kIGNyZWF0aW5nIGl0IHdvbid0IGFwcGVhciBpbiB5b3VyIEdpdEh1YiB0aW1lbGluZS4NCiAgICA8bGk+PHN0cm9uZz5UaGUgZGF0YSB5b3UgY3JlYXRlIGFuZCBtb2RpZnkgaW4gZ2VvanNvbi5pbzwvc3Ryb25nPiBkb2Vzbid0DQogICAgYWNxdWlyZSBhbnkgYWRkaXRpb25hbCBsaWNlbnNlOiBpZiBpdCdzIHNlY3JldCBhbmQgY29weXJpZ2h0ZWQsIGl0IHdpbGwgcmVtYWluDQogICAgdGhhdCB3YXkgLSBpdCBkb2Vzbid0IGhhdmUgdG8gYmUgcHVibGljIG9yIG9wZW4gc291cmNlLg0KPC91bD4NCg==","base64") +
         '<br><hr><br>' +
-        marked("## Geojson.io API\nYou can interact with geojson.io programmatically in two ways:\n\n* [URL parameters](#url-api)\n* [Browser console](#console-api)\n* [Protips](#protips)\n\n## URL API\nYou can do a few interesting things with just URLs and geojson.io. Here are the\ncurrent URL formats.\n\n### `map`\n\nOpen the map at a specific location. The argument is numbers separated by `/`\nin the form `zoom/latitude/longitude`.\n\n#### Example:\n\nhttp://geojson.io/#map=2/20.0/0.0\n\n\n### `data=data:application/json,`\n\nOpen the map and load a chunk of [GeoJSON](http://geojson.org/) data from a\nURL segment directly onto the map. The GeoJSON data should be encoded\nas per `encodeURIComponent(JSON.stringify(geojson_data))`.\n\n#### Example:\n\nhttp://geojson.io/#data=data:application/json,%7B%22type%22%3A%22LineString%22%2C%22coordinates%22%3A%5B%5B0%2C0%5D%2C%5B10%2C10%5D%5D%7D\n\n\n### `data=data:text/x-url,`\n\nLoad GeoJSON data from a URL on the internet onto the map. The URL must\nrefer directly to a resource that is:\n\n* Freely accessible (not behind a password)\n* Supports [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing)\n* Is valid GeoJSON\n\nThe URL should be encoded as per `encodeURIComponent(url)`.\n\n#### Example:\n\nhttp://geojson.io/#data=data:text/x-url,http%3A%2F%2Fapi.tiles.mapbox.com%2Fv3%2Ftmcw.map-gdv4cswo%2Fmarkers.geojson\n\n\n### `id=gist:`\n\nLoad GeoJSON data from a [GitHub Gist](https://gist.github.com/), given an argument\nin the form of `login/gistid`. The Gist can be public or private, and must\ncontain a file with a `.geojson` extension that is valid GeoJSON.\n\n#### Example:\n\nhttp://geojson.io/#id=gist:tmcw/e9a29ad54dbaa83dee08&map=8/39.198/-76.981\n\n\n### `id=github:`\n\nLoad a file from a GitHub repository. You must have access to the file, and\nit must be valid GeoJSON.\n\nThe url is in the form:\n\n    login/repository/blob/branch/filepath\n\n#### Example:\n\nhttp://geojson.io/#id=github:benbalter/dc-wifi-social/blob/master/bars.geojson&map=14/38.9140/-77.0302\n\n## Console API\n\n[Pop open your browser console](http://debugbrowser.com/) and see the beautiful\nexamples: geojson.io has started to expose a subset of its inner workings for\nyou to mess around with:\n\n\n### `window.api.map`\n\nThe [Leaflet](http://leafletjs.com/) map that you see and use on the site. See\nthe [Leaflet API](http://leafletjs.com/reference.html) for all the things you\ncan do with it.\n\nFor instance, you could add another map layer:\n\n```js\nwindow.api.map.addLayer(L.tileLayer('http://tile.stamen.com/watercolor/{z}/{x}/{y}.jpg'))\n```\n\n### `window.api.data`\n\nThe data model. See the [code to get an idea of how it works](https://github.com/mapbox/geojson.io/blob/gh-pages/src/core/data.js#L48-L90) -\nyou'll want to use stuff like `data.set({ map: { .. your geojson map information .. })`\nand `data.get('map')` and `data.mergeFeatures([arrayoffeatures])` to do your\ndirty business.\n\n## `window.api.mapLayer`\n\nThis is the Leaflet featureGroup that gets filled with features as you draw\nthem. You can operate on this directly to do advanced stuff like\nselecting a feature with its id:\n\n```js\nvar layers = [];\nwindow.api.mapLayer.eachLayer(l => { layers.push(l); });\nlayers.find(l => l.feature.id == 'a').openPopup();\n```\n\nThat example uses [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)\nwhich are supported in Chrome & Firefox.\n\n## `window.api.drawControl`\n\nExposes the [Leaflet.Draw](https://github.com/Leaflet/Leaflet.draw) control\ninstance in the console.\n\n## `window.api.on(event, fn)`\n\nExposes d3 events, including `change`.\n\n## Protips\n\nTo include `turf` from [turf](https://github.com/turfjs/turf) so you can manipulate features\nwith its GIS features, run this in the CLI, which will download the script and evaluate it.\n\n```js\nfetch('https://npmcdn.com/@turf/turf@3.1.1/turf.js').then(t => t.text()).then(eval)\n```\n");
+        marked("## Geojson.io API\r\nYou can interact with geojson.io programmatically in two ways:\r\n\r\n* [URL parameters](#url-api)\r\n* [Browser console](#console-api)\r\n* [Protips](#protips)\r\n\r\n## URL API\r\nYou can do a few interesting things with just URLs and geojson.io. Here are the\r\ncurrent URL formats.\r\n\r\n### `map`\r\n\r\nOpen the map at a specific location. The argument is numbers separated by `/`\r\nin the form `zoom/latitude/longitude`.\r\n\r\n#### Example:\r\n\r\nhttp://geojson.io/#map=2/20.0/0.0\r\n\r\n\r\n### `data=data:application/json,`\r\n\r\nOpen the map and load a chunk of [GeoJSON](http://geojson.org/) data from a\r\nURL segment directly onto the map. The GeoJSON data should be encoded\r\nas per `encodeURIComponent(JSON.stringify(geojson_data))`.\r\n\r\n#### Example:\r\n\r\nhttp://geojson.io/#data=data:application/json,%7B%22type%22%3A%22LineString%22%2C%22coordinates%22%3A%5B%5B0%2C0%5D%2C%5B10%2C10%5D%5D%7D\r\n\r\n\r\n### `data=data:text/x-url,`\r\n\r\nLoad GeoJSON data from a URL on the internet onto the map. The URL must\r\nrefer directly to a resource that is:\r\n\r\n* Freely accessible (not behind a password)\r\n* Supports [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing)\r\n* Is valid GeoJSON\r\n\r\nThe URL should be encoded as per `encodeURIComponent(url)`.\r\n\r\n#### Example:\r\n\r\nhttp://geojson.io/#data=data:text/x-url,http%3A%2F%2Fapi.tiles.mapbox.com%2Fv3%2Ftmcw.map-gdv4cswo%2Fmarkers.geojson\r\n\r\n\r\n### `id=gist:`\r\n\r\nLoad GeoJSON data from a [GitHub Gist](https://gist.github.com/), given an argument\r\nin the form of `login/gistid`. The Gist can be public or private, and must\r\ncontain a file with a `.geojson` extension that is valid GeoJSON.\r\n\r\n#### Example:\r\n\r\nhttp://geojson.io/#id=gist:tmcw/e9a29ad54dbaa83dee08&map=8/39.198/-76.981\r\n\r\n\r\n### `id=github:`\r\n\r\nLoad a file from a GitHub repository. You must have access to the file, and\r\nit must be valid GeoJSON.\r\n\r\nThe url is in the form:\r\n\r\n    login/repository/blob/branch/filepath\r\n\r\n#### Example:\r\n\r\nhttp://geojson.io/#id=github:benbalter/dc-wifi-social/blob/master/bars.geojson&map=14/38.9140/-77.0302\r\n\r\n## Console API\r\n\r\n[Pop open your browser console](http://debugbrowser.com/) and see the beautiful\r\nexamples: geojson.io has started to expose a subset of its inner workings for\r\nyou to mess around with:\r\n\r\n\r\n### `window.api.map`\r\n\r\nThe [Leaflet](http://leafletjs.com/) map that you see and use on the site. See\r\nthe [Leaflet API](http://leafletjs.com/reference.html) for all the things you\r\ncan do with it.\r\n\r\nFor instance, you could add another map layer:\r\n\r\n```js\r\nwindow.api.map.addLayer(L.tileLayer('http://tile.stamen.com/watercolor/{z}/{x}/{y}.jpg'))\r\n```\r\n\r\n### `window.api.data`\r\n\r\nThe data model. See the [code to get an idea of how it works](https://github.com/mapbox/geojson.io/blob/gh-pages/src/core/data.js#L48-L90) -\r\nyou'll want to use stuff like `data.set({ map: { .. your geojson map information .. })`\r\nand `data.get('map')` and `data.mergeFeatures([arrayoffeatures])` to do your\r\ndirty business.\r\n\r\n## `window.api.mapLayer`\r\n\r\nThis is the Leaflet featureGroup that gets filled with features as you draw\r\nthem. You can operate on this directly to do advanced stuff like\r\nselecting a feature with its id:\r\n\r\n```js\r\nvar layers = [];\r\nwindow.api.mapLayer.eachLayer(l => { layers.push(l); });\r\nlayers.find(l => l.feature.id == 'a').openPopup();\r\n```\r\n\r\nThat example uses [arrow functions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions)\r\nwhich are supported in Chrome & Firefox.\r\n\r\n## `window.api.drawControl`\r\n\r\nExposes the [Leaflet.Draw](https://github.com/Leaflet/Leaflet.draw) control\r\ninstance in the console.\r\n\r\n## `window.api.on(event, fn)`\r\n\r\nExposes d3 events, including `change`.\r\n\r\n## Protips\r\n\r\nTo include `turf` from [turf](https://github.com/turfjs/turf) so you can manipulate features\r\nwith its GIS features, run this in the CLI, which will download the script and evaluate it.\r\n\r\n```js\r\nfetch('https://npmcdn.com/@turf/turf@3.1.1/turf.js').then(t => t.text()).then(eval)\r\n```\r\n");
     function render(selection) {
         var area = selection
             .html('')
@@ -17289,7 +17295,7 @@ module.exports = function(context) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":4,"marked":30}],114:[function(require,module,exports){
+},{"buffer":4,"marked":32}],116:[function(require,module,exports){
 var validate = require('../lib/validate'),
     zoomextent = require('../lib/zoomextent'),
     saver = require('../ui/saver.js');
@@ -17354,7 +17360,7 @@ module.exports = function(context) {
     return render;
 };
 
-},{"../lib/validate":110,"../lib/zoomextent":111,"../ui/saver.js":126}],115:[function(require,module,exports){
+},{"../lib/validate":112,"../lib/zoomextent":113,"../ui/saver.js":128}],117:[function(require,module,exports){
 var getLinks = require('../source/local_server').getLinks;
 
 module.exports = {
@@ -17430,7 +17436,7 @@ function linkCreator(selection) {
   });
 };
 
-},{"../source/local_server":117}],116:[function(require,module,exports){
+},{"../source/local_server":119}],118:[function(require,module,exports){
 /* eslint-disable linebreak-style */
 var smartZoom = require('../lib/smartzoom.js'),
   encodeHTML = require('encode-html'),
@@ -17580,7 +17586,7 @@ module.exports = function(context) {
 
 
 
-},{"../lib/smartzoom.js":109,"./fixed-table":112,"./link-creator":115,"decode-html":8,"encode-html":10}],117:[function(require,module,exports){
+},{"../lib/smartzoom.js":111,"./fixed-table":114,"./link-creator":117,"decode-html":9,"encode-html":10}],119:[function(require,module,exports){
 var serverConf = require('../../server/config.json');
 
 module.exports = {
@@ -17635,7 +17641,7 @@ function getLinks(callback) {
   xhr.send();
 }
 
-},{"../../server/config.json":94}],118:[function(require,module,exports){
+},{"../../server/config.json":96}],120:[function(require,module,exports){
 var buttons = require('./ui/mode_buttons'),
     file_bar = require('./ui/file_bar'),
 //    userUi = require('./ui/user'),
@@ -17717,7 +17723,7 @@ function ui(context) {
     };
 }
 
-},{"./ui/file_bar":119,"./ui/layer_switch":121,"./ui/mode_buttons":125}],119:[function(require,module,exports){
+},{"./ui/file_bar":121,"./ui/layer_switch":123,"./ui/mode_buttons":127}],121:[function(require,module,exports){
 /* eslint-disable linebreak-style */
 var
     geojsonNormalize = require('../lib/geojson-normalize');
@@ -17945,7 +17951,7 @@ module.exports = function fileBar(context) {
     return bar;
 };
 
-},{"../config.js":95,"../lib/geojson-normalize":105,"../lib/meta.js":106,"../lib/readfile":108,"../lib/zoomextent":111,"../source/local_server":117,"../ui/saver.js":126,"./flash":120,"./modal.js":124}],120:[function(require,module,exports){
+},{"../config.js":97,"../lib/geojson-normalize":107,"../lib/meta.js":108,"../lib/readfile":110,"../lib/zoomextent":113,"../source/local_server":119,"../ui/saver.js":128,"./flash":122,"./modal.js":126}],122:[function(require,module,exports){
 var message = require('./message');
 
 module.exports = flash;
@@ -17967,7 +17973,7 @@ function flash(selection, txt) {
     return msg;
 }
 
-},{"./message":123}],121:[function(require,module,exports){
+},{"./message":125}],123:[function(require,module,exports){
 module.exports = function(context) {
 
     return function(selection) {
@@ -18035,7 +18041,7 @@ module.exports = function(context) {
     };
 };
 
-},{}],122:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 require('qs-hash');
 require('../lib/custom_hash.js');
 
@@ -18310,7 +18316,7 @@ function bindPopup(l) {
     });
 }
 
-},{"../../data/maki.json":1,"../lib/custom_hash.js":104,"../lib/geojson-normalize":105,"../lib/popup":107,"escape-html":11,"geojson-rewind":20,"leaflet-geodesy":27,"qs-hash":39}],123:[function(require,module,exports){
+},{"../../data/maki.json":1,"../lib/custom_hash.js":106,"../lib/geojson-normalize":107,"../lib/popup":109,"escape-html":11,"geojson-rewind":22,"leaflet-geodesy":29,"qs-hash":41}],125:[function(require,module,exports){
 module.exports = message;
 
 function message(selection) {
@@ -18351,7 +18357,7 @@ function message(selection) {
     return sel;
 }
 
-},{}],124:[function(require,module,exports){
+},{}],126:[function(require,module,exports){
 module.exports = function(selection, blocking) {
 
     var previous = selection.select('div.modal');
@@ -18419,7 +18425,7 @@ module.exports = function(selection, blocking) {
     return shaded;
 };
 
-},{}],125:[function(require,module,exports){
+},{}],127:[function(require,module,exports){
 var table = require('../panel/table'),
     json = require('../panel/json'),
     help = require('../panel/help');
@@ -18473,7 +18479,7 @@ module.exports = function(context, pane) {
     };
 };
 
-},{"../panel/help":113,"../panel/json":114,"../panel/table":116}],126:[function(require,module,exports){
+},{"../panel/help":115,"../panel/json":116,"../panel/table":118}],128:[function(require,module,exports){
 var flash = require('./flash');
 
 module.exports = function(context) {
@@ -18503,7 +18509,7 @@ module.exports = function(context) {
     context.data.save(success);
 };
 
-},{"./flash":120}],"topojson":[function(require,module,exports){
+},{"./flash":122}],"topojson":[function(require,module,exports){
 var topojson = module.exports = require("./topojson");
 topojson.topology = require("./lib/topojson/topology");
 topojson.simplify = require("./lib/topojson/simplify");
@@ -18514,4 +18520,4 @@ topojson.bind = require("./lib/topojson/bind");
 topojson.stitch = require("./lib/topojson/stitch");
 topojson.scale = require("./lib/topojson/scale");
 
-},{"./lib/topojson/bind":44,"./lib/topojson/clockwise":47,"./lib/topojson/filter":51,"./lib/topojson/prune":55,"./lib/topojson/scale":57,"./lib/topojson/simplify":58,"./lib/topojson/stitch":60,"./lib/topojson/topology":61,"./topojson":73}]},{},[103]);
+},{"./lib/topojson/bind":46,"./lib/topojson/clockwise":49,"./lib/topojson/filter":53,"./lib/topojson/prune":57,"./lib/topojson/scale":59,"./lib/topojson/simplify":60,"./lib/topojson/stitch":62,"./lib/topojson/topology":63,"./topojson":75}]},{},[105]);
